@@ -32,7 +32,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/anikage.png',
     type: 'anime',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -146,7 +146,8 @@ function _item(it) {
   return {
     id: it.slug,
     title: t,
-    url: 'anikage://anime/' + it.slug,
+    
+    url: 'anikage://anime/' + it.slug, type: 'anime',
     cover: _cover(it.coverImage),
     banner: it.bannerImage || '',
     subtitle: sub,

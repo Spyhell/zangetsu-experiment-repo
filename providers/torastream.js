@@ -21,6 +21,20 @@ var _KITSU = 'https://anime-kitsu.strem.fun';
 var _TORRENTIO = 'https://torrentio.strem.fun';
 var _TPBPLUS = 'https://thepiratebay-plus.strem.fun';
 
+// Public trackers appended to every magnet so Zangetsu's torrent engine can
+// discover peers quickly instead of relying on DHT alone (bare magnets hang
+// on "finding peers").
+var _TRACKERS = [
+  'udp://tracker.opentrackr.org:1337/announce',
+  'udp://open.stealth.si:80/announce',
+  'udp://exodus.desync.com:6969/announce',
+  'udp://tracker.torrent.eu.org:451/announce',
+  'udp://explodie.org:6969/announce',
+  'udp://tracker.bittor.space:6969/announce',
+  'udp://open.demonii.com:1337/announce',
+  'udp://tracker.moeking.me:6969/announce'
+];
+
 var _ALL_PROVIDERS = '1337x,AniDex,BluDV,Cinecalidad,Comando,EZTV,HorribleSubs,'
   + 'KickassTorrents,MagnetDL,NyaaSi,RARBG,Rutor,ThePirateBay,TokyoTosho,TorrentGalaxy';
 
@@ -28,7 +42,7 @@ function getInfo() {
   return {
     name: 'ToraStream', lang: 'en', baseUrl: 'https://torrentio.strem.fun',
     logo: 'https://torrentio.strem.fun/images/logo_v1.png',
-    type: 'movie', version: '1.0.0'
+    type: 'movie', version: '1.0.1'
   };
 }
 
@@ -62,6 +76,12 @@ function getSettings() {
         { value: 'seeders', label: 'By seeders' },
         { value: 'size', label: 'By size' }
       ]
+    },
+    {
+      key: 'extraTrackers',
+      label: 'Add public trackers to magnets (faster peer discovery)',
+      type: 'bool',
+      default: true
     },
     {
       key: 'limitPerQuality',
@@ -217,6 +237,20 @@ function _sizeCapGb(kind) {
 function _pad(n) {
   n = parseInt(n, 10) || 0;
   return n < 10 ? ('0' + n) : String(n);
+}
+
+function _extraTrackers() { return _bool(_settings().extraTrackers, true); }
+
+// Full magnet with display name + public trackers so playback starts fast.
+function _buildMagnet(hash, name) {
+  var m = 'magnet:?xt=urn:btih:' + hash;
+  if (name) m += '&dn=' + encodeURIComponent(String(name).slice(0, 200));
+  if (_extraTrackers()) {
+    for (var i = 0; i < _TRACKERS.length; i++) {
+      m += '&tr=' + encodeURIComponent(_TRACKERS[i]);
+    }
+  }
+  return m;
 }
 
 // fetch JSON, following up to 3 redirects (Cinemeta → cinemeta-catalogs).
@@ -557,7 +591,7 @@ function _parseStream(s) {
   var tagBlob = (release + ' ' + filename + ' ' + blob).toLowerCase();
   return {
     hash: hash,
-    magnet: 'magnet:?xt=urn:btih:' + hash,
+    magnet: _buildMagnet(hash, filename || release),
     title: release || filename || hash,
     filename: filename,
     size: size,

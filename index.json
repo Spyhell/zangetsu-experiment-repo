@@ -1,1 +1,1 @@
-{"description":"Oppai Stream source for the Zangetsu app.","name":"Oppai Stream","sources":[{"file":"providers/oppaistream.js","id":"oppaistream","lang":"en","logo":"icons/oppaistream.png","name":"Oppai Stream","type":"anime","version":"1.0.2"}]}
+{"description":"Oppai Stream source for the Zangetsu app.","name":"spyhell-repo","sources":[{"file":"providers/oppaistream.js","id":"oppaistream","lang":"en","logo":"icons/oppaistream.png","name":"Oppai Stream","type":"anime","version":"1.0.2"}]}

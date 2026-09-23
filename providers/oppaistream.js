@@ -22,7 +22,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 function getInfo() {
   return { name: 'Oppai Stream', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.1' };
+    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.2' };
 }
 
 function _get(url, ref) {
@@ -192,9 +192,17 @@ function getVideoSources(episodeUrl) {
       if (!/kind='(captions|subtitles)'/.test(tag)) continue;
       var tsrc = (tag.match(/\ssrc='([^']+)'/) || [])[1];
       if (!tsrc) continue;
+      // Absolute URL: the player's subtitle fetcher won't resolve relatives.
+      if (tsrc.indexOf('http') !== 0) {
+        tsrc = SITE + (tsrc.charAt(0) === '/' ? '' : '/') + tsrc;
+      }
       var tlabel = (tag.match(/\slabel='([^']+)'/) || [])[1]
         || (tag.match(/\ssrclang='([^']+)'/) || [])[1] || 'sub';
-      subs.push({ url: tsrc.split(' ').join('%20'), label: tlabel });
+      // `lang` is required by the app's Subtitle model — without it the whole
+      // VideoSource fails to parse and the player ends up with a null URL.
+      subs.push({ url: tsrc.split(' ').join('%20'), lang: tlabel,
+        label: tlabel,
+        format: /\.srt(\?|$)/i.test(tsrc) ? 'srt' : 'vtt' });
     }
     var m = html.match(/availableres\s*=\s*(\{[^}]*\})/);
     if (m) {

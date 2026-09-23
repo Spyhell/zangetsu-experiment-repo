@@ -46,6 +46,15 @@
       "logo": "icons/torastream.png",
       "type": "movie",
       "version": "1.0.2"
+    },
+    {
+      "id": "anikage",
+      "name": "Anikage",
+      "file": "providers/anikage.js",
+      "lang": "en",
+      "logo": "icons/anikage.png",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

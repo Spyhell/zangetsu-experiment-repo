@@ -457,13 +457,37 @@ function getHome() {
   }).catch(function () { return []; });
 }
 
+// A minimal but complete detail object: getDetail never rejects, so the
+// detail screen always has something to render even if the page fetch fails.
+function _baseDetail(pageUrl, slug) {
+  var name = slug ? slug.replace(/-/g, ' ') : 'Unknown';
+  var ep = { id: pageUrl, number: 1, title: name, url: pageUrl };
+  return {
+    id: pageUrl, title: name, url: pageUrl, cover: null,
+    description: '', genres: [], studios: [], type: 'anime',
+    sourceId: SOURCE_ID, episodes: [ep], subCount: 1, dubCount: 0
+  };
+}
+// Cloudflare-cleared fetch: the Zangetsu runtime routes
+// fetch(url, { browser: true }) through its native WebView CF solver.
+function _getCf(url, ref) {
+  return fetch(url, { headers: { 'User-Agent': UA, 'Referer': ref || SITE + '/' }, browser: true })
+    .then(function (r) { return (r && r.body) || ''; })
+    .catch(function () { return ''; });
+}
+
 function getDetail(url) {
   var pageUrl = String(url || '');
   var slug = _slugFromUrl(pageUrl);
-  if (!slug) { return Promise.reject(new Error('hanime: bad video url')); }
+  if (!slug) { return Promise.resolve(_baseDetail(pageUrl, null)); }
   pageUrl = SITE + '/videos/hentai/' + slug;
   return _get(pageUrl, SITE + '/').then(function (html) {
-    if (!html) { throw new Error('hanime: failed to load video page'); }
+    // Plain fetch came back empty (possible Cloudflare block on-device):
+    // retry through the CF-cleared lane before giving up.
+    if (!html) { return _getCf(pageUrl, SITE + '/'); }
+    return html;
+  }).then(function (html) {
+    if (!html) { return _baseDetail(pageUrl, slug); }
     var rawTitle = _meta(html, 'og:title') || '';
     var title = rawTitle.replace(/\s*-\s*hanime\.tv\s*$/i, '').replace(/^Watch\s+/i, '').replace(/\s+Hentai\s+Video\s+in\s+\d+p\s+HD\s*$/i, '').trim() || slug.replace(/-/g, ' ');
     var cover = _abs(_meta(html, 'og:image'));
@@ -480,10 +504,11 @@ function getDetail(url) {
     var ep = { id: pageUrl, number: 1, title: title, url: pageUrl };
     return {
       id: pageUrl, title: title, url: pageUrl, cover: cover,
-      description: description || null, genres: tags.length ? tags : null,
+      description: description || '', genres: tags, studios: [],
+      type: 'anime', sourceId: SOURCE_ID,
       brand: brand, episodes: [ep], subCount: 1, dubCount: 0
     };
-  });
+  }).catch(function () { return _baseDetail(pageUrl, slug); });
 }
 
 function getEpisodes(detailUrl) {

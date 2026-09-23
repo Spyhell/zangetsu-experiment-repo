@@ -42,7 +42,7 @@ function getInfo() {
   return {
     name: 'ToraStream', lang: 'en', baseUrl: 'https://torrentio.strem.fun',
     logo: 'https://torrentio.strem.fun/images/logo_v1.png',
-    type: 'movie', version: '1.0.1'
+    type: 'movie', version: '1.0.2'
   };
 }
 
@@ -82,6 +82,16 @@ function getSettings() {
       label: 'Add public trackers to magnets (faster peer discovery)',
       type: 'bool',
       default: true
+    },
+    {
+      key: 'streamMethod',
+      label: 'Stream method',
+      type: 'enum',
+      default: 'magnet',
+      options: [
+        { value: 'magnet', label: 'Magnet link' },
+        { value: 'torrentFile', label: '.torrent file over HTTPS (try if magnets stall)' }
+      ]
     },
     {
       key: 'limitPerQuality',
@@ -240,6 +250,22 @@ function _pad(n) {
 }
 
 function _extraTrackers() { return _bool(_settings().extraTrackers, true); }
+
+function _streamMethod() {
+  var v = _trim(_settings().streamMethod || 'magnet');
+  return v === 'torrentFile' ? 'torrentFile' : 'magnet';
+}
+
+// Magnet (default) or direct .torrent file over HTTPS. The .torrent route
+// skips the DHT metadata fetch entirely — the app downloads the metadata
+// file straight from itorrents.org, which helps on networks where DHT or
+// UDP trackers are blocked.
+function _streamUrl(c) {
+  if (_streamMethod() === 'torrentFile') {
+    return 'https://itorrents.org/torrent/' + c.hash + '.torrent';
+  }
+  return c.magnet;
+}
 
 // Full magnet with display name + public trackers so playback starts fast.
 function _buildMagnet(hash, name) {
@@ -665,10 +691,11 @@ function _sourceFrom(c) {
   if (c.pack) label += ' · Pack';
   var kind = c.audioKind || 'raw';
   if (kind === 'dub' && !/\bdub\b|\bdual/i.test(label)) label += ' · Dub';
+  var icon = _streamMethod() === 'torrentFile' ? '📄 ' : '🧲 ';
   return {
-    url: c.magnet,
+    url: _streamUrl(c),
     quality: q,
-    label: '🧲 ' + label,
+    label: icon + label,
     container: 'torrent',
     kind: kind,
     audioLang: kind === 'dub' ? 'en' : (kind === 'sub' ? 'ja' : '')

@@ -22,7 +22,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 function getInfo() {
   return { name: 'Oppai Stream', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.0' };
+    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.1' };
 }
 
 function _get(url, ref) {
@@ -47,8 +47,11 @@ function _parseCards(html) {
     var a = _attrs(tagEnd < 0 ? '' : c.substring(0, tagEnd));
     if (!a.idgt || !a.folder) continue;
     var href = (c.match(/<a[^>]+href='([^']*watch\?e=[^']*)'/) || [])[1];
-    var cover = (c.match(/<img[^>]+class='cover-img-in'[^>]+src='([^']+)'/)
-      || c.match(/<img[^>]+src='([^']+)'[^>]+class='cover-img-in'/) || [])[1];
+    // The img tag carries an onError fallback (this.src='.../maintenanceN.png'):
+    // strip it first or the fallback URL wins over the real thumbnail.
+    var imgTag = (c.match(/<img[^>]*class='cover-img-in'[^>]*>/) || [])[0] || '';
+    imgTag = imgTag.replace(/onError="[^"]*"/g, '');
+    var cover = (imgTag.match(/\ssrc='([^']+)'/) || [])[1];
     out.push({
       showId: a.idgt,
       folder: a.folder,
@@ -177,8 +180,22 @@ function getVideoSources(episodeUrl) {
   if (url.indexOf('http') !== 0) {
     return Promise.reject(new Error('OppaiStream: bad episode url'));
   }
+  // Keep only the ?e= slug: extra params (e.g. &for=search) sometimes 404.
+  var em = url.match(/^([^?]+\/watch\?e=[^&]+)/);
+  if (em) url = em[1];
   return _get(url, SITE + '/').then(function (html) {
     var out = [];
+    // Subtitle tracks, e.g. <track src='...vtt' label='en' kind='subtitles'>.
+    var subs = [], tm, trackRe = /<track[^>]*>/g;
+    while ((tm = trackRe.exec(html)) !== null) {
+      var tag = tm[0];
+      if (!/kind='(captions|subtitles)'/.test(tag)) continue;
+      var tsrc = (tag.match(/\ssrc='([^']+)'/) || [])[1];
+      if (!tsrc) continue;
+      var tlabel = (tag.match(/\slabel='([^']+)'/) || [])[1]
+        || (tag.match(/\ssrclang='([^']+)'/) || [])[1] || 'sub';
+      subs.push({ url: tsrc.split(' ').join('%20'), label: tlabel });
+    }
     var m = html.match(/availableres\s*=\s*(\{[^}]*\})/);
     if (m) {
       var map = null;
@@ -191,7 +208,7 @@ function getVideoSources(episodeUrl) {
             quality: _Q_LABEL[k] || k,
             container: /\.webm(\?|$)/i.test(u) ? 'webm' : 'mp4',
             headers: { 'User-Agent': UA, 'Referer': SITE + '/' },
-            kind: 'sub', audioLang: 'ja', subtitles: [] });
+            kind: 'sub', audioLang: 'ja', subtitles: subs });
         });
       }
     }
@@ -203,7 +220,7 @@ function getVideoSources(episodeUrl) {
         out.push({ url: u2, quality: '720p',
           container: /\.webm(\?|$)/i.test(u2) ? 'webm' : 'mp4',
           headers: { 'User-Agent': UA, 'Referer': SITE + '/' },
-          kind: 'sub', audioLang: 'ja', subtitles: [] });
+          kind: 'sub', audioLang: 'ja', subtitles: subs });
       }
     }
     if (!out.length) throw new Error('OppaiStream: no streams found');

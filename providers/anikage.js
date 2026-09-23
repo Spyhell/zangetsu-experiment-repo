@@ -32,7 +32,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/anikage.png',
     type: 'anime',
-    version: '1.0.1'
+    version: '1.0.2'
   };
 }
 
@@ -250,12 +250,13 @@ function getDetail(url) {
         id: slug,
         title: t,
         url: 'anikage://anime/' + slug,
+        type: 'anime',
         cover: _cover(a.coverImage),
         banner: a.bannerImage || a.fanart || '',
         description: desc,
         genres: a.genres || [],
         subtitle: meta,
-        year: a.year || null,
+        year: a.year != null ? String(a.year) : null,
         rating: typeof a.averageScore === 'number' ? a.averageScore / 10 : null,
         episodes: episodes
       };

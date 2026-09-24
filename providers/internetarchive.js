@@ -1,6 +1,6 @@
 /* Internet Archive (archive.org) — public-domain / classic feature films.
  * Search + metadata via archive.org JSON APIs, direct MP4 streams.
- * type: movie, lang: en, version 1.0.0 */
+ * type: movie, lang: en, version 1.0.1 */
 'use strict';
 
 var _SITE = 'https://archive.org';
@@ -13,7 +13,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: _SITE + '/favicon.ico',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -152,6 +152,19 @@ function _guessQuality(name) {
   return undefined;
 }
 
+/* archive.org/download/<id>/<file> answers 302 -> a dn*.archive.org node.
+ * The app player does not follow that redirect, so resolve it here with a
+ * 2-byte ranged request (the bridge follows redirects and reports the final
+ * URL) and hand the player the direct CDN URL. Falls back to the plain
+ * download URL if the resolve fails. */
+function _resolveDirect(dlUrl) {
+  return fetch(dlUrl, {
+    headers: { 'User-Agent': _UA, 'Range': 'bytes=0-1' }
+  }).then(function (r) {
+    return (r && r.url) ? r.url : dlUrl;
+  }, function () { return dlUrl; });
+}
+
 function getVideoSources(episodeUrl) {
   var identifier = _idOf(episodeUrl);
   if (!identifier) return Promise.reject(new Error('bad url: ' + episodeUrl));
@@ -168,18 +181,18 @@ function getVideoSources(episodeUrl) {
     var big = mp4s.filter(function (f) { return f.size >= 50 * 1024 * 1024; });
     var pool = big.length ? big : mp4s;
     pool.sort(function (a, b) { return b.size - a.size; });
-    var sources = [];
+    var jobs = [];
     for (var j = 0; j < Math.min(pool.length, 3); j++) {
-      var fname = pool[j].name;
-      var q = _guessQuality(fname);
-      var src = {
-        url: _SITE + '/download/' + identifier + '/' + encodeURIComponent(fname).replace(/%2F/g, '/'),
-        container: 'mp4',
-        label: 'Archive.org'
-      };
-      if (q) src.quality = q;
-      sources.push(src);
+      (function (fname) {
+        var q = _guessQuality(fname);
+        var dlUrl = _SITE + '/download/' + identifier + '/' + encodeURIComponent(fname).replace(/%2F/g, '/');
+        jobs.push(_resolveDirect(dlUrl).then(function (directUrl) {
+          var src = { url: directUrl, container: 'mp4', label: 'Archive.org' };
+          if (q) src.quality = q;
+          return src;
+        }));
+      })(pool[j].name);
     }
-    return sources;
+    return Promise.all(jobs);
   });
 }

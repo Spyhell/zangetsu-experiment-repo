@@ -1,7 +1,7 @@
 /* TokyVideo (tokyvideo.com) — video hosting site with full movies.
  * Search/detail pages are plain HTML; watch pages embed a direct MP4 <source>.
  * NOTE: catalog is overwhelmingly Spanish-language / Spanish-dubbed.
- * type: movie, lang: es, version 1.0.0 */
+ * type: movie, lang: es, version 1.0.1 */
 'use strict';
 
 var _SITE = 'https://www.tokyvideo.com';
@@ -14,7 +14,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: _SITE + '/favicon.ico',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -34,6 +34,39 @@ function _cleanTitle(t) {
   return (t || '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+/* Item URLs are self-contained: 'tkv://<slug>?t=..&y=..&p=..' so detail and
+ * episodes resolve locally with no network. The episode keeps the real
+ * https page URL for getVideoSources (the MP4 token lives in that page). */
+function _parseQuery(qs) {
+  var out = {};
+  var parts = (qs || '').split('&');
+  for (var i = 0; i < parts.length; i++) {
+    var kv = parts[i].split('=');
+    if (kv[0]) {
+      try { out[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || ''); }
+      catch (e) { out[kv[0]] = kv[1] || ''; }
+    }
+  }
+  return out;
+}
+
+function _parseItemUrl(url) {
+  var m = /^tkv:\/\/([^\?]+)(?:\?(.*))?$/.exec(url || '');
+  if (!m) return null;
+  return { slug: m[1], meta: _parseQuery(m[2] || '') };
+}
+
+function _itemUrl(slug, title, year, poster) {
+  return 'tkv://' + slug +
+    '?t=' + encodeURIComponent(title || '') +
+    '&y=' + encodeURIComponent(year || '') +
+    '&p=' + encodeURIComponent(poster || '');
+}
+
+function _pageUrl(slug) {
+  return _SITE + '/video/' + slug;
+}
+
 /* <a href=".../video/<slug>" class="thumb-duracion"><img alt="<title>" ... data-src="<poster>" */
 function _parseResults(html) {
   var items = [];
@@ -42,15 +75,19 @@ function _parseResults(html) {
   while ((m = re.exec(html)) !== null) {
     var pageUrl = m[1];
     if (pageUrl.indexOf('http') !== 0) pageUrl = _SITE + pageUrl;
+    var slug = pageUrl.split('/video/')[1] || '';
     var title = _cleanTitle(m[2]);
-    if (!title) continue;
+    if (!title || !slug) continue;
+    var year = _yearOf(title);
+    var poster = m[3];
+    if (poster.indexOf('http') !== 0) poster = _SITE + poster;
     items.push({
-      id: 'tkv://' + pageUrl.split('/video/')[1],
+      id: 'tkv://' + slug,
       title: title,
-      url: pageUrl,
+      url: _itemUrl(slug, title, year, poster),
       type: 'movie',
-      cover: m[3],
-      year: _yearOf(title)
+      cover: poster,
+      year: year
     });
   }
   return items;
@@ -81,6 +118,22 @@ function _og(html, prop) {
 }
 
 function getDetail(url, opts) {
+  var parsed = _parseItemUrl(url);
+  // Self-contained URL from search/home: resolve locally, no network.
+  if (parsed && (parsed.meta.t || parsed.slug)) {
+    var meta = parsed.meta;
+    var title = meta.t || _cleanTitle(parsed.slug);
+    var detail = {
+      id: 'tkv://' + parsed.slug,
+      title: title,
+      url: url,
+      type: 'movie',
+      year: meta.y || _yearOf(title)
+    };
+    if (meta.p) detail.cover = meta.p;
+    return Promise.resolve(detail);
+  }
+  // Legacy https page URL: fetch the page as before.
   return _getText(url).then(function (html) {
     var title = _cleanTitle(_og(html, 'title'));
     if (!title) {
@@ -99,6 +152,17 @@ function getDetail(url, opts) {
 }
 
 function getEpisodes(url, opts) {
+  var parsed = _parseItemUrl(url);
+  if (parsed && parsed.slug) {
+    var meta = parsed.meta || {};
+    var page = _pageUrl(parsed.slug);
+    return Promise.resolve([{
+      id: 'tkv://w/' + parsed.slug,
+      title: meta.t || _cleanTitle(parsed.slug) || 'Full Movie',
+      url: page,
+      number: 1
+    }]);
+  }
   return _getText(url).then(function (html) {
     var title = _cleanTitle(_og(html, 'title')) || url;
     return [{

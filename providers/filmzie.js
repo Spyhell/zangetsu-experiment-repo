@@ -1,6 +1,6 @@
 /* Filmzie (filmzie.com) — free, legal ad-supported movie catalog.
  * Public JSON API, direct ad-free HLS streams (up to 1080p observed).
- * type: movie, lang: en, version 1.0.0 */
+ * type: movie, lang: en, version 1.0.1 */
 'use strict';
 
 var _SITE = 'https://filmzie.com';
@@ -14,7 +14,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: _SITE + '/favicon.ico',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -32,10 +32,15 @@ function _getText(url) {
   });
 }
 
+/* Posters live on Filmzie's CloudFront distribution. NOTE: the
+ * img.filmzie.com/cdn/<key> form 303s into a broken cloudimg.io URL
+ * (HTTP 400), so it must not be used. Verified 200 on 2026-09-24. */
+var _IMG_CDN = 'https://d3qxhvuywdalwo.cloudfront.net';
+
 function _poster(item) {
   try {
     var key = item.images && item.images.poster && item.images.poster.amazonKey;
-    if (key) return 'https://img.filmzie.com/cdn/' + key;
+    if (key) return _IMG_CDN + '/' + key;
   } catch (e) {}
   return '';
 }

@@ -1,6 +1,6 @@
 /* PeerTube (via search.joinpeertube.org) — federated video network.
  * Search across instances, direct MP4/HLS streams from the hosting instance.
- * type: movie, lang: en, version 1.0.0
+ * type: movie, lang: en, version 1.0.1
  * Note: catalog is user-uploaded and multilingual; instances vary in speed. */
 'use strict';
 
@@ -14,7 +14,7 @@ function getInfo() {
     baseUrl: 'https://search.joinpeertube.org',
     logo: 'https://search.joinpeertube.org/favicon.ico',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -25,11 +25,30 @@ function _getJson(url) {
   });
 }
 
-/* url forms: 'pt://<host>/<uuid>' (detail) or 'pt://w/<host>/<uuid>' (episode) */
+/* url forms:
+ *   'pt://<host>/<uuid>'                     (legacy detail; needs instance API)
+ *   'pt://<host>/<uuid>?t=..&y=..&p=..&d=..' (self-contained; no network needed)
+ *   'pt://w/<host>/<uuid>'                   (episode)
+ * Detail/episodes are resolved locally from the embedded metadata whenever
+ * present, so the detail screen works even when the hosting instance is
+ * unreachable from the device. */
+function _parseQuery(qs) {
+  var out = {};
+  var parts = (qs || '').split('&');
+  for (var i = 0; i < parts.length; i++) {
+    var kv = parts[i].split('=');
+    if (kv[0]) {
+      try { out[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || ''); }
+      catch (e) { out[kv[0]] = kv[1] || ''; }
+    }
+  }
+  return out;
+}
+
 function _parse(url) {
-  var m = /^pt:\/\/(w\/)?([^\/]+)\/([0-9a-f-]{36})$/i.exec(url || '');
+  var m = /^pt:\/\/(w\/)?([^\/\?]+)\/([0-9a-f-]{36})(?:\?(.*))?$/i.exec(url || '');
   if (!m) return null;
-  return { host: m[2], uuid: m[3] };
+  return { host: m[2], uuid: m[3], meta: _parseQuery(m[4] || '') };
 }
 
 function _year(v) {
@@ -44,6 +63,14 @@ function _cover(v, host) {
   return '';
 }
 
+function _itemUrl(host, uuid, v) {
+  var q = '?t=' + encodeURIComponent(v.name || uuid) +
+    '&y=' + encodeURIComponent(_year(v) || '') +
+    '&p=' + encodeURIComponent(_cover(v, host) || '') +
+    '&d=' + encodeURIComponent(((v.description || v.truncatedDescription) || '').slice(0, 300));
+  return 'pt://' + host + '/' + uuid + q;
+}
+
 function _docToItem(v) {
   if (!v || !v.uuid || !v.account || !v.account.host) return null;
   var host = v.account.host;
@@ -52,7 +79,7 @@ function _docToItem(v) {
   return {
     id: 'pt://' + host + '/' + v.uuid,
     title: v.name || v.uuid,
-    url: 'pt://' + host + '/' + v.uuid,
+    url: _itemUrl(host, v.uuid, v),
     type: 'movie',
     cover: _cover(v, host) || undefined,
     year: _year(v)
@@ -95,9 +122,25 @@ function _videoApi(host, uuid) {
   return _getJson('https://' + host + '/api/v1/videos/' + uuid);
 }
 
+function _localDetail(p, url) {
+  var meta = p.meta || {};
+  return {
+    id: 'pt://' + p.host + '/' + p.uuid,
+    title: meta.t || p.uuid,
+    url: url,
+    type: 'movie',
+    year: meta.y || null,
+    cover: meta.p || undefined,
+    description: meta.d || ''
+  };
+}
+
 function getDetail(url, opts) {
   var p = _parse(url);
   if (!p) return Promise.reject(new Error('bad url: ' + url));
+  // Self-contained URL from search: no network needed.
+  if (p.meta && p.meta.t) return Promise.resolve(_localDetail(p, url));
+  // Legacy URL: fall back to the instance API.
   return _videoApi(p.host, p.uuid).then(function (v) {
     return {
       id: 'pt://' + p.host + '/' + p.uuid,
@@ -108,12 +151,24 @@ function getDetail(url, opts) {
       cover: v.thumbnailUrl || _cover(v, p.host) || undefined,
       description: (v.description || '').slice(0, 400)
     };
+  }, function () {
+    // Instance unreachable — still show the screen with what the URL has.
+    return _localDetail(p, url);
   });
 }
 
 function getEpisodes(url, opts) {
   var p = _parse(url);
   if (!p) return Promise.reject(new Error('bad url: ' + url));
+  var title = (p.meta && p.meta.t) || null;
+  if (title) {
+    return Promise.resolve([{
+      id: 'pt://w/' + p.host + '/' + p.uuid,
+      title: title,
+      url: 'pt://w/' + p.host + '/' + p.uuid,
+      number: 1
+    }]);
+  }
   return _videoApi(p.host, p.uuid).then(function (v) {
     return [{
       id: 'pt://w/' + p.host + '/' + p.uuid,

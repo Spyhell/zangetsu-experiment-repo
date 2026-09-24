@@ -1,6 +1,6 @@
 /* Wikimedia Commons — public-domain feature films hosted on upload.wikimedia.org.
  * MediaWiki API search + imageinfo, direct WebM/MP4 streams, duration-filtered.
- * type: movie, lang: en, version 1.0.0 */
+ * type: movie, lang: en, version 1.0.1 */
 'use strict';
 
 var _API = 'https://commons.wikimedia.org/w/api.php';
@@ -14,7 +14,7 @@ function getInfo() {
     baseUrl: 'https://commons.wikimedia.org',
     logo: 'https://commons.wikimedia.org/favicon.ico',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -65,19 +65,25 @@ function _descOf(ii) {
   return '';
 }
 
+/* iiurlwidth=640 makes imageinfo return thumburl (a ready 640px thumbnail)
+ * which we use as the poster. Without it there is no cover at all. */
+var _II_PROPS = 'url|size|metadata|extmetadata';
+
 function _itemFromPage(pg) {
   if (!pg || pg.missing) return null;
   var ii = (pg.imageinfo && pg.imageinfo[0]) || null;
   if (!ii || !ii.url) return null;
   if (_durationSec(ii) < _MIN_SECONDS) return null;
   var title = _cleanTitle(pg.title || '');
-  return {
+  var item = {
     id: 'wc://' + encodeURIComponent(pg.title),
     title: title,
     url: 'wc://' + encodeURIComponent(pg.title),
     type: 'movie',
     year: _yearOf(title)
   };
+  if (ii.thumburl) item.cover = ii.thumburl;
+  return item;
 }
 
 /* Search File: namespace, then batch-resolve durations and filter. */
@@ -89,7 +95,7 @@ function _searchFiles(query, limit, offset) {
     var hits = ((d && d.query && d.query.search) || []);
     if (!hits.length) return [];
     var titles = hits.map(function (h) { return h.title; }).join('|');
-    return _api('prop=imageinfo&iiprop=url|size|metadata|extmetadata&titles=' + encodeURIComponent(titles))
+    return _api('prop=imageinfo&iiprop=' + _II_PROPS + '&iiurlwidth=640&titles=' + encodeURIComponent(titles))
       .then(function (d2) {
         var pages = ((d2 && d2.query && d2.query.pages) || []);
         var items = [];
@@ -120,17 +126,31 @@ function getHome(opts) {
   ]);
 }
 
+/* Minimal detail derived from the File: title in the URL — used when the
+ * API detail fetch fails, so the screen always has something to show. */
+function _detailFromTitle(title) {
+  var name = _cleanTitle(title);
+  return {
+    id: 'wc://' + encodeURIComponent(title),
+    title: name,
+    url: 'wc://' + encodeURIComponent(title),
+    type: 'movie',
+    year: _yearOf(name),
+    description: ''
+  };
+}
+
 function getDetail(url, opts) {
   var title = _titleOf(url);
   if (!title) return Promise.reject(new Error('bad url: ' + url));
-  return _api('prop=imageinfo&iiprop=url|size|metadata|extmetadata&titles=' + encodeURIComponent(title))
+  return _api('prop=imageinfo&iiprop=' + _II_PROPS + '&iiurlwidth=640&titles=' + encodeURIComponent(title))
     .then(function (d) {
       var pages = ((d && d.query && d.query.pages) || []);
       if (!pages.length || pages[0].missing) throw new Error('not found: ' + title);
       var pg = pages[0];
       var ii = (pg.imageinfo && pg.imageinfo[0]) || {};
       var name = _cleanTitle(pg.title || '');
-      return {
+      var detail = {
         id: 'wc://' + encodeURIComponent(title),
         title: name,
         url: url,
@@ -138,6 +158,13 @@ function getDetail(url, opts) {
         year: _yearOf(name),
         description: _descOf(ii)
       };
+      if (ii.thumburl) detail.cover = ii.thumburl;
+      return detail;
+    }, function () {
+      // API unreachable from this device — still show the title screen.
+      var fb = _detailFromTitle(title);
+      fb.url = url;
+      return fb;
     });
 }
 

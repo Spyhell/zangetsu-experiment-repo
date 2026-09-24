@@ -100,15 +100,6 @@
       "name": "Wikimedia Films",
       "type": "movie",
       "version": "1.0.3"
-    },
-    {
-      "file": "providers/tokyvideo.js",
-      "id": "tokyvideo",
-      "lang": "es",
-      "logo": "icons/tokyvideo.png",
-      "name": "TokyVideo",
-      "type": "movie",
-      "version": "1.0.3"
     }
   ]
 }

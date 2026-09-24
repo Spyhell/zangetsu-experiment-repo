@@ -1,11 +1,10 @@
 /* PeerTube (via search.joinpeertube.org) — federated video network.
  * Search across instances, direct MP4/HLS streams from the hosting instance.
- * type: movie, lang: en, version 1.0.2
+ * type: movie, lang: en, version 1.0.3
  * Note: catalog is user-uploaded and multilingual; instances vary in speed. */
 'use strict';
 
-var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
-
+var _VMARK = ''; // diagnostic marker retired
 var _SEARCH = 'https://search.joinpeertube.org/api/v1/search/videos';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 
@@ -16,7 +15,7 @@ function getInfo() {
     baseUrl: 'https://search.joinpeertube.org',
     logo: 'https://search.joinpeertube.org/favicon.ico',
     type: 'movie',
-    version: '1.0.2'
+    version: '1.0.3'
   };
 }
 
@@ -126,14 +125,17 @@ function _videoApi(host, uuid) {
 
 function _localDetail(p, url) {
   var meta = p.meta || {};
+  var title = meta.t || p.uuid;
+  var epUrl = 'pt://w/' + p.host + '/' + p.uuid;
   return {
     id: 'pt://' + p.host + '/' + p.uuid,
-    title: meta.t || p.uuid,
+    title: title,
     url: url,
     type: 'movie',
     year: meta.y || null,
     cover: meta.p || undefined,
-    description: meta.d || ''
+    description: meta.d || '',
+    episodes: [{ id: epUrl, title: title, url: epUrl, number: 1 }]
   };
 }
 
@@ -144,14 +146,17 @@ function getDetail(url, opts) {
   if (p.meta && p.meta.t) return Promise.resolve(_localDetail(p, url));
   // Legacy URL: fall back to the instance API.
   return _videoApi(p.host, p.uuid).then(function (v) {
+    var title = v.name || p.uuid;
+    var epUrl = 'pt://w/' + p.host + '/' + p.uuid;
     return {
       id: 'pt://' + p.host + '/' + p.uuid,
-      title: v.name || p.uuid,
+      title: title,
       url: url,
       type: 'movie',
       year: _year(v),
       cover: v.thumbnailUrl || _cover(v, p.host) || undefined,
-      description: (v.description || '').slice(0, 400)
+      description: (v.description || '').slice(0, 400),
+      episodes: [{ id: epUrl, title: title, url: epUrl, number: 1 }]
     };
   }, function () {
     // Instance unreachable — still show the screen with what the URL has.

@@ -1,10 +1,9 @@
 /* Filmzie (filmzie.com) — free, legal ad-supported movie catalog.
  * Public JSON API, direct ad-free HLS streams (up to 1080p observed).
- * type: movie, lang: en, version 1.0.2 */
+ * type: movie, lang: en, version 1.0.3 */
 'use strict';
 
-var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
-
+var _VMARK = ''; // diagnostic marker retired
 var _SITE = 'https://filmzie.com';
 var _API = _SITE + '/api/v1';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -16,7 +15,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: _SITE + '/favicon.ico',
     type: 'movie',
-    version: '1.0.2'
+    version: '1.0.3'
   };
 }
 
@@ -151,6 +150,7 @@ function getHome(opts) {
 function getDetail(url, opts) {
   var meta = _metaFromUrl(url);
   if (!meta) return Promise.reject(new Error('bad url: ' + url));
+  var epUrl = 'fz://w/' + meta.videoId;
   return Promise.resolve({
     id: 'fz://' + meta.contentId,
     title: meta.title || meta.contentId,
@@ -158,7 +158,8 @@ function getDetail(url, opts) {
     type: 'movie',
     year: meta.year || null,
     cover: meta.poster || undefined,
-    description: meta.description || ''
+    description: meta.description || '',
+    episodes: [{ id: epUrl, title: meta.title || 'Full Movie', url: epUrl, number: 1 }]
   });
 }
 

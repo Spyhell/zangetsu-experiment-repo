@@ -1,10 +1,9 @@
 /* Internet Archive (archive.org) — public-domain / classic feature films.
  * Search + metadata via archive.org JSON APIs, direct MP4 streams.
- * type: movie, lang: en, version 1.0.2 */
+ * type: movie, lang: en, version 1.0.3 */
 'use strict';
 
-var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
-
+var _VMARK = ''; // diagnostic marker retired
 var _SITE = 'https://archive.org';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 
@@ -15,7 +14,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: _SITE + '/favicon.ico',
     type: 'movie',
-    version: '1.0.2'
+    version: '1.0.3'
   };
 }
 
@@ -118,14 +117,17 @@ function getDetail(url, opts) {
   if (!identifier) return Promise.reject(new Error('bad url: ' + url));
   return _metadata(identifier).then(function (d) {
     var meta = (d || {}).metadata || {};
+    var title = meta.title || identifier;
+    var epUrl = 'ia://watch/' + identifier;
     return {
       id: 'ia://' + identifier,
-      title: meta.title || identifier,
+      title: title,
       url: 'ia://movie/' + identifier,
       type: 'movie',
       year: _yearStr(meta.year),
       cover: _cover(identifier),
-      description: _descStr(meta.description)
+      description: _descStr(meta.description),
+      episodes: [{ id: epUrl, title: title, url: epUrl, number: 1 }]
     };
   });
 }

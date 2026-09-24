@@ -1,10 +1,9 @@
 /* Wikimedia Commons — public-domain feature films hosted on upload.wikimedia.org.
  * MediaWiki API search + imageinfo, direct WebM/MP4 streams, duration-filtered.
- * type: movie, lang: en, version 1.0.2 */
+ * type: movie, lang: en, version 1.0.3 */
 'use strict';
 
-var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
-
+var _VMARK = ''; // diagnostic marker retired
 var _API = 'https://commons.wikimedia.org/w/api.php';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 var _MIN_SECONDS = 1800; // 30 min — keeps feature films, drops trailers/clips
@@ -16,7 +15,7 @@ function getInfo() {
     baseUrl: 'https://commons.wikimedia.org',
     logo: 'https://commons.wikimedia.org/favicon.ico',
     type: 'movie',
-    version: '1.0.2'
+    version: '1.0.3'
   };
 }
 
@@ -132,13 +131,15 @@ function getHome(opts) {
  * API detail fetch fails, so the screen always has something to show. */
 function _detailFromTitle(title) {
   var name = _cleanTitle(title);
+  var epUrl = 'wc://w/' + encodeURIComponent(title);
   return {
     id: 'wc://' + encodeURIComponent(title),
     title: name,
     url: 'wc://' + encodeURIComponent(title),
     type: 'movie',
     year: _yearOf(name),
-    description: ''
+    description: '',
+    episodes: [{ id: epUrl, title: name, url: epUrl, number: 1 }]
   };
 }
 
@@ -152,13 +153,15 @@ function getDetail(url, opts) {
       var pg = pages[0];
       var ii = (pg.imageinfo && pg.imageinfo[0]) || {};
       var name = _cleanTitle(pg.title || '');
+      var epUrl = 'wc://w/' + encodeURIComponent(title);
       var detail = {
         id: 'wc://' + encodeURIComponent(title),
         title: name,
         url: url,
         type: 'movie',
         year: _yearOf(name),
-        description: _descOf(ii)
+        description: _descOf(ii),
+        episodes: [{ id: epUrl, title: name, url: epUrl, number: 1 }]
       };
       if (ii.thumburl) detail.cover = ii.thumburl;
       return detail;

@@ -1,11 +1,10 @@
 /* TokyVideo (tokyvideo.com) — video hosting site with full movies.
  * Search/detail pages are plain HTML; watch pages embed a direct MP4 <source>.
  * NOTE: catalog is overwhelmingly Spanish-language / Spanish-dubbed.
- * type: movie, lang: es, version 1.0.2 */
+ * type: movie, lang: es, version 1.0.3 */
 'use strict';
 
-var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
-
+var _VMARK = ''; // diagnostic marker retired
 var _SITE = 'https://www.tokyvideo.com';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 
@@ -16,7 +15,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: _SITE + '/favicon.ico',
     type: 'movie',
-    version: '1.0.2'
+    version: '1.0.3'
   };
 }
 
@@ -133,6 +132,8 @@ function getDetail(url, opts) {
       year: meta.y || _yearOf(title)
     };
     if (meta.p) detail.cover = meta.p;
+    var epUrl = _pageUrl(parsed.slug);
+    detail.episodes = [{ id: 'tkv://w/' + parsed.slug, title: title, url: epUrl, number: 1 }];
     return Promise.resolve(detail);
   }
   // Legacy https page URL: fetch the page as before.
@@ -148,7 +149,8 @@ function getDetail(url, opts) {
       url: url,
       type: 'movie',
       year: _yearOf(title),
-      cover: _og(html, 'image') || undefined
+      cover: _og(html, 'image') || undefined,
+      episodes: [{ id: 'tkv://w/' + url.split('/video/')[1], title: title, url: url, number: 1 }]
     };
   });
 }

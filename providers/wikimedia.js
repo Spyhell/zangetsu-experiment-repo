@@ -1,7 +1,9 @@
 /* Wikimedia Commons — public-domain feature films hosted on upload.wikimedia.org.
  * MediaWiki API search + imageinfo, direct WebM/MP4 streams, duration-filtered.
- * type: movie, lang: en, version 1.0.1 */
+ * type: movie, lang: en, version 1.0.2 */
 'use strict';
+
+var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
 
 var _API = 'https://commons.wikimedia.org/w/api.php';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -14,7 +16,7 @@ function getInfo() {
     baseUrl: 'https://commons.wikimedia.org',
     logo: 'https://commons.wikimedia.org/favicon.ico',
     type: 'movie',
-    version: '1.0.1'
+    version: '1.0.2'
   };
 }
 
@@ -77,7 +79,7 @@ function _itemFromPage(pg) {
   var title = _cleanTitle(pg.title || '');
   var item = {
     id: 'wc://' + encodeURIComponent(pg.title),
-    title: title,
+    title: _VMARK + title,
     url: 'wc://' + encodeURIComponent(pg.title),
     type: 'movie',
     year: _yearOf(title)

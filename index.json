@@ -30,15 +30,6 @@
       "version": "1.0.0"
     },
     {
-      "file": "providers/moviebox.js",
-      "id": "moviebox",
-      "lang": "en",
-      "logo": "icons/moviebox.png",
-      "name": "MovieBox",
-      "type": "movie",
-      "version": "1.0.0"
-    },
-    {
       "id": "torastream",
       "name": "ToraStream",
       "file": "providers/torastream.js",

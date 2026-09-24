@@ -1,8 +1,10 @@
 /* PeerTube (via search.joinpeertube.org) — federated video network.
  * Search across instances, direct MP4/HLS streams from the hosting instance.
- * type: movie, lang: en, version 1.0.1
+ * type: movie, lang: en, version 1.0.2
  * Note: catalog is user-uploaded and multilingual; instances vary in speed. */
 'use strict';
+
+var _VMARK = '[v102] '; // TEMP diagnostic: proves which JS build is running on-device
 
 var _SEARCH = 'https://search.joinpeertube.org/api/v1/search/videos';
 var _UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -14,7 +16,7 @@ function getInfo() {
     baseUrl: 'https://search.joinpeertube.org',
     logo: 'https://search.joinpeertube.org/favicon.ico',
     type: 'movie',
-    version: '1.0.1'
+    version: '1.0.2'
   };
 }
 
@@ -78,7 +80,7 @@ function _docToItem(v) {
   if (dur < 600) return null; // skip clips/trailers
   return {
     id: 'pt://' + host + '/' + v.uuid,
-    title: v.name || v.uuid,
+    title: _VMARK + (v.name || v.uuid),
     url: _itemUrl(host, v.uuid, v),
     type: 'movie',
     cover: _cover(v, host) || undefined,

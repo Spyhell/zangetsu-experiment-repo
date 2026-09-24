@@ -30,15 +30,6 @@
       "version": "1.0.0"
     },
     {
-      "file": "providers/moviebox.js",
-      "id": "moviebox",
-      "lang": "en",
-      "logo": "icons/moviebox.png",
-      "name": "MovieBox",
-      "type": "movie",
-      "version": "1.0.0"
-    },
-    {
       "id": "torastream",
       "name": "ToraStream",
       "file": "providers/torastream.js",
@@ -98,15 +89,6 @@
       "lang": "en",
       "logo": "icons/wikimedia.png",
       "name": "Wikimedia Films",
-      "type": "movie",
-      "version": "1.0.3"
-    },
-    {
-      "file": "providers/tokyvideo.js",
-      "id": "tokyvideo",
-      "lang": "es",
-      "logo": "icons/tokyvideo.png",
-      "name": "TokyVideo",
       "type": "movie",
       "version": "1.0.3"
     },

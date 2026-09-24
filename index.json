@@ -72,7 +72,7 @@
       "logo": "icons/internetarchive.png",
       "name": "Internet Archive",
       "type": "movie",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "file": "providers/filmzie.js",
@@ -81,7 +81,7 @@
       "logo": "icons/filmzie.png",
       "name": "Filmzie",
       "type": "movie",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "file": "providers/peertube.js",
@@ -90,7 +90,7 @@
       "logo": "icons/peertube.png",
       "name": "PeerTube Films",
       "type": "movie",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "file": "providers/wikimedia.js",
@@ -99,7 +99,7 @@
       "logo": "icons/wikimedia.png",
       "name": "Wikimedia Films",
       "type": "movie",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "file": "providers/tokyvideo.js",
@@ -108,7 +108,7 @@
       "logo": "icons/tokyvideo.png",
       "name": "TokyVideo",
       "type": "movie",
-      "version": "1.0.1"
+      "version": "1.0.2"
     }
   ]
 }

@@ -64,6 +64,51 @@
       "name": "HentaiTV",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/internetarchive.js",
+      "id": "internetarchive",
+      "lang": "en",
+      "logo": "icons/internetarchive.png",
+      "name": "Internet Archive",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/filmzie.js",
+      "id": "filmzie",
+      "lang": "en",
+      "logo": "icons/filmzie.png",
+      "name": "Filmzie",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/peertube.js",
+      "id": "peertube",
+      "lang": "en",
+      "logo": "icons/peertube.png",
+      "name": "PeerTube Films",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/wikimedia.js",
+      "id": "wikimedia",
+      "lang": "en",
+      "logo": "icons/wikimedia.png",
+      "name": "Wikimedia Films",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/tokyvideo.js",
+      "id": "tokyvideo",
+      "lang": "es",
+      "logo": "icons/tokyvideo.png",
+      "name": "TokyVideo",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

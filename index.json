@@ -55,6 +55,24 @@
       "logo": "icons/anikage.png",
       "type": "anime",
       "version": "1.0.2"
+    },
+    {
+      "file": "providers/muchohentai.js",
+      "id": "muchohentai",
+      "lang": "en",
+      "logo": "icons/muchohentai.png",
+      "name": "MuchoHentai",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/hentaitv.js",
+      "id": "hentaitv",
+      "lang": "en",
+      "logo": "icons/hentaitv.png",
+      "name": "HentaiTV",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

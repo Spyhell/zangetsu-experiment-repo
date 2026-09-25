@@ -100,6 +100,15 @@
       "logo": "icons/cinestream.png",
       "type": "movie",
       "version": "1.0.2"
+    },
+    {
+      "id": "thenkiri",
+      "name": "TheNkiri",
+      "lang": "en",
+      "type": "movie",
+      "file": "providers/thenkiri.js",
+      "logo": "icons/thenkiri.png",
+      "version": "1.0.0"
     }
   ]
 }

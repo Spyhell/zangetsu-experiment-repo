@@ -118,6 +118,15 @@
       "logo": "icons/hentaiocean.png",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/livetvindia.js",
+      "id": "livetvindia",
+      "lang": "en",
+      "logo": "icons/livetvindia.png",
+      "name": "Live TV India",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

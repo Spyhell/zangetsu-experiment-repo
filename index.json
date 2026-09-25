@@ -127,6 +127,15 @@
       "name": "Live TV India",
       "type": "movie",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/worldlivetv.js",
+      "id": "worldlivetv",
+      "lang": "en",
+      "logo": "icons/worldlivetv.png",
+      "name": "World Live TV",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

@@ -109,6 +109,15 @@
       "file": "providers/thenkiri.js",
       "logo": "icons/thenkiri.png",
       "version": "1.0.0"
+    },
+    {
+      "id": "hentaiocean",
+      "name": "HentaiOcean",
+      "file": "providers/hentaiocean.js",
+      "lang": "en",
+      "logo": "icons/hentaiocean.png",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

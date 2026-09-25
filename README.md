@@ -1,6 +1,6 @@
-# zangetsu-providers
+# spyhell-repo
 
-Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app, containing the Oppai Stream, Hanime, HentaiMama and MovieBox providers.
+Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 
 ## How users install
 
@@ -14,16 +14,26 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app, containin
 
 ## Sources
 
-| Source | Type | Notes |
-| --- | --- | --- |
-| Oppai Stream | Anime | Hentai, direct mp4/webm streams up to 4K. |
-| Hanime | Anime | HLS streams 720p/480p/360p. |
-| HentaiMama | Anime | HLS streams up to 1080p. |
-| MovieBox | Movie | Movies & TV shows, HLS streams with subtitles. |
+| Source | Type | Version | Notes |
+| --- | --- | --- | --- |
+| Oppai Stream | Anime | 1.0.2 | Direct mp4/webm streams up to 4K. |
+| Hanime | Anime | 1.0.1 | HLS streams 720p/480p/360p. |
+| HentaiMama | Anime | 1.0.0 | HLS streams up to 1080p. |
+| Anikage | Anime | 1.0.2 | Anime streaming. |
+| HentaiTV | Anime | 1.0.0 | Anime streaming. |
+| ToraStream | Movie | 1.0.2 | Movies & TV shows. |
+| Internet Archive | Movie | 1.0.3 | Public-domain films from archive.org. |
+| Filmzie | Movie | 1.0.3 | Free films. |
+| PeerTube Films | Movie | 1.0.3 | Films from PeerTube instances. |
+| Wikimedia Films | Movie | 1.0.3 | Films from Wikimedia Commons. |
+| CineStream | Movie | 1.0.2 | Multi-source movies & shows; Hindi and English listed as separate streams. |
+| TheNkiri | Movie | 1.0.0 | Movies & shows. |
+
+New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.
 
 ## The manifest
 
-`index.json` at the root lists the source. When the source changes, bump its `version` in both the `.js` file and its `index.json` entry — installed users will see an update in the app.
+`index.json` at the root lists the sources. When a source changes, bump its `version` in both the `.js` file and its `index.json` entry — installed users will see an update in the app.
 
 ## License
 

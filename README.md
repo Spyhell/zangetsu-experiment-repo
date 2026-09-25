@@ -21,13 +21,14 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | HentaiMama | Anime | 1.0.0 | HLS streams up to 1080p. |
 | Anikage | Anime | 1.0.2 | Anime streaming. |
 | HentaiTV | Anime | 1.0.0 | Anime streaming. |
-| ToraStream | Movie | 1.0.2 | Movies & TV shows. |
+| ToraStream | Movie | 1.0.3 | Movies & TV shows. |
 | Internet Archive | Movie | 1.0.3 | Public-domain films from archive.org. |
 | Filmzie | Movie | 1.0.3 | Free films. |
 | PeerTube Films | Movie | 1.0.3 | Films from PeerTube instances. |
 | Wikimedia Films | Movie | 1.0.3 | Films from Wikimedia Commons. |
-| CineStream | Movie | 1.0.2 | Multi-source movies & shows; Hindi and English listed as separate streams. |
+| CineStream | Movie | 1.0.3 | Multi-source movies & shows; Hindi and English listed as separate streams. |
 | TheNkiri | Movie | 1.0.0 | Movies & shows. |
+| HentaiOcean | Anime | 1.0.0 | ENG SUB hentai, direct mp4 streams. |
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.
 

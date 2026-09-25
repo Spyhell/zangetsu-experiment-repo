@@ -1,0 +1,114 @@
+{
+  "description": "Provider sources for the Zangetsu app.",
+  "name": "spyhell-repo",
+  "sources": [
+    {
+      "file": "providers/oppaistream.js",
+      "id": "oppaistream",
+      "lang": "en",
+      "logo": "icons/oppaistream.png",
+      "name": "Oppai Stream",
+      "type": "anime",
+      "version": "1.0.2"
+    },
+    {
+      "file": "providers/hanime.js",
+      "id": "hanime",
+      "lang": "en",
+      "logo": "icons/hanime.png",
+      "name": "Hanime",
+      "type": "anime",
+      "version": "1.0.1"
+    },
+    {
+      "file": "providers/hentaimama.js",
+      "id": "hentaimama",
+      "lang": "en",
+      "logo": "icons/hentaimama.png",
+      "name": "HentaiMama",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "id": "torastream",
+      "name": "ToraStream",
+      "file": "providers/torastream.js",
+      "lang": "en",
+      "logo": "icons/torastream.png",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "id": "anikage",
+      "name": "Anikage",
+      "file": "providers/anikage.js",
+      "lang": "en",
+      "logo": "icons/anikage.png",
+      "type": "anime",
+      "version": "1.0.2"
+    },
+    {
+      "file": "providers/hentaitv.js",
+      "id": "hentaitv",
+      "lang": "en",
+      "logo": "icons/hentaitv.png",
+      "name": "HentaiTV",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/internetarchive.js",
+      "id": "internetarchive",
+      "lang": "en",
+      "logo": "icons/internetarchive.png",
+      "name": "Internet Archive",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/filmzie.js",
+      "id": "filmzie",
+      "lang": "en",
+      "logo": "icons/filmzie.png",
+      "name": "Filmzie",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/peertube.js",
+      "id": "peertube",
+      "lang": "en",
+      "logo": "icons/peertube.png",
+      "name": "PeerTube Films",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/wikimedia.js",
+      "id": "wikimedia",
+      "lang": "en",
+      "logo": "icons/wikimedia.png",
+      "name": "Wikimedia Films",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "id": "cinestream",
+      "name": "CineStream",
+      "file": "providers/cinestream.js",
+      "lang": "en",
+      "logo": "icons/cinestream.png",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "id": "thenkiri",
+      "name": "TheNkiri",
+      "lang": "en",
+      "type": "movie",
+      "file": "providers/thenkiri.js",
+      "logo": "icons/thenkiri.png",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -31,6 +31,8 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | HentaiOcean | Anime | 1.0.0 | ENG SUB hentai, direct mp4 streams. |
 | Live TV India | Movie | 1.0.0 | 700+ live Indian TV channels (News, Sports, Movies, Music, Kids). |
 | World Live TV | Movie | 1.0.0 | 2500+ live TV channels from India, USA & UK. |
+| Music Live TV | Movie | 1.0.0 | 700+ live music TV channels from around the world. |
+| SuperCartoons | Movie | 1.0.0 | Classic cartoons (Tom & Jerry, Looney Tunes, Popeye); direct mp4 streams. |
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.
 

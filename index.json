@@ -136,6 +136,24 @@
       "name": "World Live TV",
       "type": "movie",
       "version": "1.0.0"
+    },
+    {
+      "id": "musictv",
+      "name": "Music Live TV",
+      "file": "providers/musictv.js",
+      "lang": "en",
+      "logo": "icons/musictv.png",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "id": "supercartoons",
+      "name": "SuperCartoons",
+      "file": "providers/supercartoons.js",
+      "lang": "en",
+      "logo": "icons/supercartoons.png",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

@@ -3,6 +3,15 @@
   "name": "spyhell-repo",
   "sources": [
     {
+      "id": "nyaa",
+      "name": "Nyaa Anime",
+      "file": "providers/nyaa.js",
+      "lang": "en",
+      "logo": "icons/nyaa.png",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
       "file": "providers/oppaistream.js",
       "id": "oppaistream",
       "lang": "en",

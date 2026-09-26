@@ -22,7 +22,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 function getInfo() {
   return { name: 'Oppai Stream', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.2' };
+    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.3' };
 }
 
 function _get(url, ref) {
@@ -175,6 +175,74 @@ function getEpisodes(url, opts) {
 // ── Streams: watch page -> availableres {720,1080,4k} direct files ───────────
 var _Q_LABEL = { '720': '720p', '1080': '1080p', '4k': '4K' };
 
+// 2026-09-26: watch pages now 302 to locked.php (login gate) for anonymous
+// requests, so the availableres JSON is often unreachable. The media itself
+// lives on an ungated CDN with a stable pattern verified 2026-09-26:
+//   https://myspacecat.pictures/<Folder>/<res>/E<NN>.<ext>
+// (also mirrored on s2.myspacecat.pictures). As a fallback, derive candidate
+// URLs from the ?e=<Folder>-<ep> slug and keep only ones a HEAD probe
+// confirms as video/*.
+var _CDN_HOSTS = ['https://myspacecat.pictures', 'https://s2.myspacecat.pictures'];
+var _CDN_VARIANTS = [['720', 'mp4'], ['1080', 'mp4'], ['1080', 'webm'], ['4k', 'webm']];
+
+function _slugParts(watchUrl) {
+  var m = String(watchUrl || '').match(/[?&]e=([^&]+)/);
+  if (!m) return null;
+  var slug = m[1].replace(/\+/g, ' ');
+  var cut = slug.lastIndexOf('-');
+  if (cut < 1) return null;
+  var ep = parseInt(slug.slice(cut + 1), 10);
+  if (!ep) return null;
+  var folder;
+  try { folder = decodeURIComponent(slug.slice(0, cut)); }
+  catch (e) { folder = slug.slice(0, cut); }
+  if (!folder) return null;
+  return { folder: folder, ep: ep };
+}
+
+function _headOk(u) {
+  return fetch(u, { method: 'HEAD',
+    headers: { 'User-Agent': UA, 'Referer': SITE + '/' } }).then(function (r) {
+    if (!r || !r.ok) return false;
+    var ct = '';
+    try { ct = String((r.headers && r.headers.get('content-type')) || ''); } catch (e) {}
+    return /^video\//i.test(ct);
+  }, function () { return false; });
+}
+
+function _cdnFallback(watchUrl) {
+  var sp = _slugParts(watchUrl);
+  if (!sp) return Promise.resolve([]);
+  var epTag = 'E' + (sp.ep < 10 ? '0' + sp.ep : '' + sp.ep);
+  var folderEnc = encodeURIComponent(sp.folder);
+  // Probe sequentially; stop early once a host+variant hits to save requests.
+  var jobs = [];
+  _CDN_VARIANTS.forEach(function (v) {
+    jobs.push({ res: v[0], ext: v[1] });
+  });
+  var out = [];
+  function probeHost(host, i) {
+    if (i >= jobs.length) return Promise.resolve(out);
+    var j = jobs[i];
+    var u = host + '/' + folderEnc + '/' + j.res + '/' + epTag + '.' + j.ext;
+    return _headOk(u).then(function (ok) {
+      if (ok) {
+        out.push({ url: u,
+          quality: _Q_LABEL[j.res] || j.res,
+          container: j.ext === 'webm' ? 'webm' : 'mp4',
+          headers: { 'User-Agent': UA, 'Referer': SITE + '/' },
+          kind: 'sub', audioLang: 'ja', subtitles: [] });
+      }
+      return probeHost(host, i + 1);
+    });
+  }
+  return probeHost(_CDN_HOSTS[0], 0).then(function () {
+    // If the primary host gave nothing, try the mirror host.
+    if (out.length) return out;
+    return probeHost(_CDN_HOSTS[1], 0);
+  });
+}
+
 function getVideoSources(episodeUrl) {
   var url = String(episodeUrl || '');
   if (url.indexOf('http') !== 0) {
@@ -231,7 +299,13 @@ function getVideoSources(episodeUrl) {
           kind: 'sub', audioLang: 'ja', subtitles: subs });
       }
     }
-    if (!out.length) throw new Error('OppaiStream: no streams found');
     return out;
+  }).then(function (out) {
+    if (out.length) return out;
+    // Watch page gated (302 -> locked.php): derive streams from the CDN.
+    return _cdnFallback(url).then(function (cdn) {
+      if (!cdn.length) throw new Error('OppaiStream: no streams found');
+      return cdn;
+    });
   });
 }

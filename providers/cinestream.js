@@ -28,7 +28,7 @@ function getInfo() {
     baseUrl: 'https://github.com/SaurabhKaperwan/CSX',
     logo: 'https://raw.githubusercontent.com/SaurabhKaperwan/CSX/main/CineStream/icons/cinestream.png',
     type: 'movie',
-    version: '1.0.3'
+    version: '1.0.4'
   };
 }
 
@@ -135,6 +135,15 @@ function _postJson(url, data, headers) {
     if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + url);
     return r.json();
   });
+}
+
+/* Fail-soft wrapper for a sub-source job. NOTE: `.then(f, r)`'s second arg
+ * only catches the INPUT promise's rejection — never failures from f's own
+ * returned chain — so each scraper is wrapped here instead: one flaky
+ * sub-source (e.g. VidFast 500s) must not kill the other sources. */
+function _soft(p) {
+  return Promise.resolve(p).then(function (v) { return v; },
+    function () { return []; });
 }
 
 /* ---- TMDB ---- */
@@ -397,8 +406,13 @@ function _scrapeVidfast(p) {
       var h2 = { 'Referer': base + '/' };
       if (init.token) h2['X-CSRF-Token'] = init.token;
       return fetch(init.servers, { method: 'POST', headers: h2 }).then(function (r) {
+        // VidFast intermittently 403/500s this endpoint; never feed an
+        // error page to the decrypt API (it answers 500 and used to abort
+        // the whole lookup).
+        if (!r.ok) return null;
         return r.text();
       }).then(function (serversEnc) {
+        if (!serversEnc) return [];
         return _postJson(_DECRYPT_API + '/dec-vidfast', { text: serversEnc });
       }).then(function (sj) {
         var servers = (sj && sj.result) || [];
@@ -407,8 +421,9 @@ function _scrapeVidfast(p) {
           (function (server) {
             jobs.push(
               fetch(init.stream + '/' + server.data, { method: 'POST', headers: h2 })
-                .then(function (r) { return r.text(); })
+                .then(function (r) { if (!r.ok) return null; return r.text(); })
                 .then(function (streamEnc) {
+                  if (!streamEnc) return null;
                   return _postJson(_DECRYPT_API + '/dec-vidfast', { text: streamEnc });
                 })
                 .then(function (stj) {
@@ -466,8 +481,11 @@ function _scrapeVidcore(p) {
       var h2 = { 'Referer': base + '/', 'X-Requested-With': 'XMLHttpRequest' };
       if (init.token) h2['X-CSRF-Token'] = init.token;
       return fetch(init.servers, { method: 'POST', headers: h2 }).then(function (r) {
+        // Same guard as VidFast: never feed an error page to the decrypt API.
+        if (!r.ok) return null;
         return r.text();
       }).then(function (serversEnc) {
+        if (!serversEnc) return [];
         return _postJson(_DECRYPT_API + '/dec-vidcore', { text: serversEnc });
       }).then(function (sj) {
         var servers = (sj && sj.result) || [];
@@ -476,8 +494,9 @@ function _scrapeVidcore(p) {
           (function (server) {
             jobs.push(
               fetch(init.stream + '/' + server.data, { method: 'POST', headers: h2 })
-                .then(function (r) { return r.text(); })
+                .then(function (r) { if (!r.ok) return null; return r.text(); })
                 .then(function (streamEnc) {
+                  if (!streamEnc) return null;
                   return _postJson(_DECRYPT_API + '/dec-vidcore', { text: streamEnc });
                 })
                 .then(function (stj) {
@@ -1237,12 +1256,13 @@ function getVideoSources(episodeUrl) {
     mirrorJob = Promise.resolve([[], []]);
   }
 
-  // Fan out to all enabled sub-sources
+  // Fan out to all enabled sub-sources. Each job is fail-soft: a single
+  // flaky sub-source must never abort the whole lookup.
   return Promise.all([
-    _scrapeVidfast(p),
-    _scrapeVidcore(p),
-    _scrapeVidlink(p),
-    mirrorJob
+    _soft(_scrapeVidfast(p)),
+    _soft(_scrapeVidcore(p)),
+    _soft(_scrapeVidlink(p)),
+    _soft(mirrorJob)
   ]).then(function (results) {
     var out = [];
     var seen = {};
@@ -1258,8 +1278,9 @@ function getVideoSources(episodeUrl) {
     pushArr(results[0]);
     pushArr(results[1]);
     pushArr(results[2]);
-    pushArr(results[3][0]);
-    pushArr(results[3][1]);
+    var m = results[3] || [];
+    pushArr(m[0]);
+    pushArr(m[1]);
     if (!out.length) throw new Error('No streams found. Check TMDB API key in settings and source toggles.');
     return out;
   });

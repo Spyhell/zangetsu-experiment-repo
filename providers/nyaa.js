@@ -37,7 +37,7 @@ var _TRACKERS = [
 
 function getInfo() {
   return { name: 'Nyaa Anime', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/static/favicon.png', type: 'anime', version: '1.0.2' };
+    logo: SITE + '/static/favicon.png', type: 'anime', version: '1.0.3' };
 }
 
 function _get(url) {
@@ -117,10 +117,11 @@ function _audioKind(title) {
 // lookups max, and fully fail-soft: a miss just leaves cover unset.
 var KITSU_API = 'https://kitsu.io/api/edge/anime?filter%5Btext%5D=';
 var KITSU_TAIL = '&page%5Blimit%5D=1&fields%5Banime%5D=posterImage';
-// Per-call budget for NEW cover lookups: enough for the first screen,
-// keeps the list fast on slow networks. The module cache fills up across
-// calls, so later loads keep gaining posters without slowing any one load.
-var MAX_NEW_COVERS = 12;
+// Per-call budget for NEW cover lookups: one small parallel wave, so the
+// first load stays well inside the app's timeout even on slow mobile
+// networks (a big first-load batch made the app show its retry screen).
+// The module cache fills a few more posters on every later load.
+var MAX_NEW_COVERS = 4;
 var _coverCache = {}; // anime name -> poster url ('' = none found)
 
 function _cleanName(title) {
@@ -161,7 +162,7 @@ function _kitsuCover(name) {
       try { j = JSON.parse(body); } catch (e) { j = null; }
       var a = j && j.data && j.data[0] && j.data[0].attributes;
       var p = a && a.posterImage;
-      return (p && (p.large || p.medium || p.small)) || '';
+      return (p && (p.small || p.medium || p.large)) || '';
     })
     .catch(function () { return ''; });
 }

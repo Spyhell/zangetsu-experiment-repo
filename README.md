@@ -16,7 +16,8 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 
 | Source | Type | Version | Notes |
 | --- | --- | --- | --- |
-| Oppai Stream | Anime | 1.0.2 | Direct mp4/webm streams up to 4K. |
+| Nyaa Anime | Anime | 1.0.1 | Anime torrents from nyaa.si. |
+| Oppai Stream | Anime | 1.0.3 | Direct mp4/webm streams up to 4K. |
 | Hanime | Anime | 1.0.1 | HLS streams 720p/480p/360p. |
 | HentaiMama | Anime | 1.0.0 | HLS streams up to 1080p. |
 | Anikage | Anime | 1.0.2 | Anime streaming. |
@@ -26,7 +27,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | Filmzie | Movie | 1.0.3 | Free films. |
 | PeerTube Films | Movie | 1.0.3 | Films from PeerTube instances. |
 | Wikimedia Films | Movie | 1.0.3 | Films from Wikimedia Commons. |
-| CineStream | Movie | 1.0.3 | Multi-source movies & shows; Hindi and English listed as separate streams. |
+| CineStream | Movie | 1.0.4 | Multi-source movies & shows; Hindi and English listed as separate streams. |
 | TheNkiri | Movie | 1.0.0 | Movies & shows. |
 | HentaiOcean | Anime | 1.0.0 | ENG SUB hentai, direct mp4 streams. |
 | Live TV India | Movie | 1.0.0 | 700+ live Indian TV channels (News, Sports, Movies, Music, Kids). |

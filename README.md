@@ -16,7 +16,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 
 | Source | Type | Version | Notes |
 | --- | --- | --- | --- |
-| Nyaa Anime | Anime | 1.0.1 | Anime torrents from nyaa.si. |
+| Nyaa Anime | Anime | 1.0.2 | Anime torrents from nyaa.si. |
 | Oppai Stream | Anime | 1.0.3 | Direct mp4/webm streams up to 4K. |
 | Hanime | Anime | 1.0.1 | HLS streams 720p/480p/360p. |
 | HentaiMama | Anime | 1.0.0 | HLS streams up to 1080p. |

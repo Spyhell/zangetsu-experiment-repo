@@ -9,7 +9,7 @@
       "logo": "icons/oppaistream.png",
       "name": "Oppai Stream",
       "type": "anime",
-      "version": "1.0.2"
+      "version": "1.0.3"
     },
     {
       "file": "providers/hanime.js",
@@ -99,7 +99,7 @@
       "lang": "en",
       "logo": "icons/cinestream.png",
       "type": "movie",
-      "version": "1.0.3"
+      "version": "1.0.4"
     },
     {
       "id": "thenkiri",

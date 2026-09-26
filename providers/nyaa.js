@@ -37,7 +37,7 @@ var _TRACKERS = [
 
 function getInfo() {
   return { name: 'Nyaa Anime', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/static/favicon.png', type: 'anime', version: '1.0.1' };
+    logo: SITE + '/static/favicon.png', type: 'anime', version: '1.0.2' };
 }
 
 function _get(url) {
@@ -116,6 +116,11 @@ function _audioKind(title) {
 // ask the free Kitsu anime API for a poster. Cached per name, 6 parallel
 // lookups max, and fully fail-soft: a miss just leaves cover unset.
 var KITSU_API = 'https://kitsu.io/api/edge/anime?filter%5Btext%5D=';
+var KITSU_TAIL = '&page%5Blimit%5D=1&fields%5Banime%5D=posterImage';
+// Per-call budget for NEW cover lookups: enough for the first screen,
+// keeps the list fast on slow networks. The module cache fills up across
+// calls, so later loads keep gaining posters without slowing any one load.
+var MAX_NEW_COVERS = 12;
 var _coverCache = {}; // anime name -> poster url ('' = none found)
 
 function _cleanName(title) {
@@ -144,7 +149,7 @@ function _nameCandidates(title) {
 }
 
 function _kitsuCover(name) {
-  var url = KITSU_API + encodeURIComponent(name) + '&page%5Blimit%5D=1';
+  var url = KITSU_API + encodeURIComponent(name) + KITSU_TAIL;
   return fetch(url, { headers: { 'User-Agent': UA,
     'Accept': 'application/vnd.api+json' } })
     .then(function (r) {
@@ -190,6 +195,7 @@ function _resolveCover(title) {
 
 // Run promise factories with at most n in flight (ES5).
 function _eachLimit(list, n, fn) {
+  if (!list.length) return Promise.resolve([]);
   var i = 0, active = 0, done = false;
   var results = new Array(list.length);
   return new Promise(function (resolve) {
@@ -217,13 +223,19 @@ function _eachLimit(list, n, fn) {
 
 // Attach covers to a list of items; a poster miss never fails the list.
 function _withCovers(items) {
-  var seen = {}, queue = [], i;
+  var seen = {}, queue = [], i, budgeted = 0;
   for (i = 0; i < items.length; i++) {
     var key = _nameCandidates(items[i].title)[0] || '';
     items[i]._ck = key;
-    if (key && !seen[key]) { seen[key] = 1; queue.push(items[i].title); }
+    if (!key || seen[key]) continue;
+    seen[key] = 1;
+    // Already-known posters are free; only new lookups cost the budget.
+    if (Object.prototype.hasOwnProperty.call(_coverCache, key)) continue;
+    if (budgeted >= MAX_NEW_COVERS) continue;
+    budgeted++;
+    queue.push(items[i].title);
   }
-  return _eachLimit(queue, 6, _resolveCover).then(function () {
+  return _eachLimit(queue, 8, _resolveCover).then(function () {
     for (var j = 0; j < items.length; j++) {
       var c = _coverCache[items[j]._ck] || '';
       if (c) items[j].cover = c;

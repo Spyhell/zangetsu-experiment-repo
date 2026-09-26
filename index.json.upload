@@ -1,0 +1,168 @@
+{
+  "description": "Provider sources for the Zangetsu app.",
+  "name": "spyhell-repo",
+  "sources": [
+    {
+      "id": "nyaa",
+      "name": "Nyaa Anime",
+      "file": "providers/nyaa.js",
+      "lang": "en",
+      "logo": "icons/nyaa.png",
+      "type": "anime",
+      "version": "1.0.2"
+    },
+    {
+      "file": "providers/oppaistream.js",
+      "id": "oppaistream",
+      "lang": "en",
+      "logo": "icons/oppaistream.png",
+      "name": "Oppai Stream",
+      "type": "anime",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/hanime.js",
+      "id": "hanime",
+      "lang": "en",
+      "logo": "icons/hanime.png",
+      "name": "Hanime",
+      "type": "anime",
+      "version": "1.0.1"
+    },
+    {
+      "file": "providers/hentaimama.js",
+      "id": "hentaimama",
+      "lang": "en",
+      "logo": "icons/hentaimama.png",
+      "name": "HentaiMama",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "id": "torastream",
+      "name": "ToraStream",
+      "file": "providers/torastream.js",
+      "lang": "en",
+      "logo": "icons/torastream.png",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "id": "anikage",
+      "name": "Anikage",
+      "file": "providers/anikage.js",
+      "lang": "en",
+      "logo": "icons/anikage.png",
+      "type": "anime",
+      "version": "1.0.2"
+    },
+    {
+      "file": "providers/hentaitv.js",
+      "id": "hentaitv",
+      "lang": "en",
+      "logo": "icons/hentaitv.png",
+      "name": "HentaiTV",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/internetarchive.js",
+      "id": "internetarchive",
+      "lang": "en",
+      "logo": "icons/internetarchive.png",
+      "name": "Internet Archive",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/filmzie.js",
+      "id": "filmzie",
+      "lang": "en",
+      "logo": "icons/filmzie.png",
+      "name": "Filmzie",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/peertube.js",
+      "id": "peertube",
+      "lang": "en",
+      "logo": "icons/peertube.png",
+      "name": "PeerTube Films",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "file": "providers/wikimedia.js",
+      "id": "wikimedia",
+      "lang": "en",
+      "logo": "icons/wikimedia.png",
+      "name": "Wikimedia Films",
+      "type": "movie",
+      "version": "1.0.3"
+    },
+    {
+      "id": "cinestream",
+      "name": "CineStream",
+      "file": "providers/cinestream.js",
+      "lang": "en",
+      "logo": "icons/cinestream.png",
+      "type": "movie",
+      "version": "1.0.4"
+    },
+    {
+      "id": "thenkiri",
+      "name": "TheNkiri",
+      "lang": "en",
+      "type": "movie",
+      "file": "providers/thenkiri.js",
+      "logo": "icons/thenkiri.png",
+      "version": "1.0.0"
+    },
+    {
+      "id": "hentaiocean",
+      "name": "HentaiOcean",
+      "file": "providers/hentaiocean.js",
+      "lang": "en",
+      "logo": "icons/hentaiocean.png",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/livetvindia.js",
+      "id": "livetvindia",
+      "lang": "en",
+      "logo": "icons/livetvindia.png",
+      "name": "Live TV India",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/worldlivetv.js",
+      "id": "worldlivetv",
+      "lang": "en",
+      "logo": "icons/worldlivetv.png",
+      "name": "World Live TV",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "id": "musictv",
+      "name": "Music Live TV",
+      "file": "providers/musictv.js",
+      "lang": "en",
+      "logo": "icons/musictv.png",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "id": "supercartoons",
+      "name": "SuperCartoons",
+      "file": "providers/supercartoons.js",
+      "lang": "en",
+      "logo": "icons/supercartoons.png",
+      "type": "movie",
+      "version": "1.0.0"
+    }
+  ]
+}

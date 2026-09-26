@@ -8,6 +8,10 @@
 // built from the infoHash + public trackers (same playback path as
 // ToraStream, which the user confirmed working). Releases under 5 seeders
 // are hidden and results sort by seeders, per the ToraStream rule.
+// Posters: nyaa's feed carries no images, so release titles are cleaned to
+// the anime name and looked up on the free Kitsu API
+// (https://kitsu.io/api/edge/anime, no key). Cover lookup is best-effort
+// and never fails the list - a title with no poster just shows no cover.
 // ES5 only.
 
 var SOURCE_ID = (typeof __SOURCE_ID !== 'undefined' && __SOURCE_ID)
@@ -33,7 +37,7 @@ var _TRACKERS = [
 
 function getInfo() {
   return { name: 'Nyaa Anime', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/static/favicon.png', type: 'anime', version: '1.0.0' };
+    logo: SITE + '/static/favicon.png', type: 'anime', version: '1.0.1' };
 }
 
 function _get(url) {
@@ -106,6 +110,132 @@ function _audioKind(title) {
   return 'sub';
 }
 
+// ── Posters via Kitsu ───────────────────────────────────────────────────────
+// nyaa.si RSS items carry no images. Clean the release title down to the
+// anime name (strip [Group], episode numbers, resolution/codec tags) and
+// ask the free Kitsu anime API for a poster. Cached per name, 6 parallel
+// lookups max, and fully fail-soft: a miss just leaves cover unset.
+var KITSU_API = 'https://kitsu.io/api/edge/anime?filter%5Btext%5D=';
+var _coverCache = {}; // anime name -> poster url ('' = none found)
+
+function _cleanName(title) {
+  var t = String(title || '');
+  t = t.replace(/^(\[[^\]]*\]\s*)+/, '');   // leading [Group] tags
+  t = t.replace(/\.(mkv|mp4|avi)$/i, '');       // file extension
+  var prev;                                      // trailing [..] / (..) tags
+  do { prev = t; t = t.replace(/\s*[\[(][^\]\)]*[\]\)]\s*$/, ''); }
+  while (t !== prev && t.length);
+  t = t.trim();
+  var m = t.match(/^(.*?)\s+-\s+\d+\s*$/); if (m) t = m[1];      // ' - 1123'
+  m = t.match(/^(.*?)\s+[Ss]\d+\s*[Ee]\d+.*$/); if (m) t = m[1]; // S08E01
+  m = t.match(/^(.*?)\s+[Ee][Pp]?\s*\d+\s*$/); if (m) t = m[1];   // EP12/E12/12
+  m = t.match(/^(.*\S)\s+\d{1,4}$/);                             // bare '1123'
+  if (m && !/^\d+$/.test(m[1]) && m[1].length > 2) t = m[1];
+  return t.trim();
+}
+
+function _nameCandidates(title) {
+  var c = _cleanName(title), out = [];
+  if (c) out.push(c);
+  var alt = c.replace(/\s+-\s+\d+(st|nd|rd|th)?\s+Season$/i, '')
+             .replace(/\s+\d+(st|nd|rd|th)?\s+Season$/i, '');
+  if (alt && alt !== c) out.push(alt);
+  return out;
+}
+
+function _kitsuCover(name) {
+  var url = KITSU_API + encodeURIComponent(name) + '&page%5Blimit%5D=1';
+  return fetch(url, { headers: { 'User-Agent': UA,
+    'Accept': 'application/vnd.api+json' } })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.body || '';
+    })
+    .then(function (body) {
+      var j = null;
+      try { j = JSON.parse(body); } catch (e) { j = null; }
+      var a = j && j.data && j.data[0] && j.data[0].attributes;
+      var p = a && a.posterImage;
+      return (p && (p.large || p.medium || p.small)) || '';
+    })
+    .catch(function () { return ''; });
+}
+
+function _fetchCover(name) {
+  if (!name) return Promise.resolve('');
+  if (Object.prototype.hasOwnProperty.call(_coverCache, name))
+    return Promise.resolve(_coverCache[name]);
+  return _kitsuCover(name).then(function (c) {
+    _coverCache[name] = c;
+    return c;
+  });
+}
+
+// Try each candidate name until one yields a poster. Never rejects.
+function _resolveCover(title) {
+  var cands = _nameCandidates(title);
+  var primary = cands[0] || '';
+  if (!primary) return Promise.resolve('');
+  if (Object.prototype.hasOwnProperty.call(_coverCache, primary))
+    return Promise.resolve(_coverCache[primary]);
+  function next(i) {
+    if (i >= cands.length) { _coverCache[primary] = ''; return Promise.resolve(''); }
+    return _fetchCover(cands[i]).then(function (c) {
+      if (c) { _coverCache[primary] = c; return c; }
+      return next(i + 1);
+    });
+  }
+  return next(0);
+}
+
+// Run promise factories with at most n in flight (ES5).
+function _eachLimit(list, n, fn) {
+  var i = 0, active = 0, done = false;
+  var results = new Array(list.length);
+  return new Promise(function (resolve) {
+    function finish(idx, v) {
+      results[idx] = v; active--;
+      if (i >= list.length && active === 0 && !done) { done = true; resolve(results); }
+      else pump();
+    }
+    function pump() {
+      if (done) return;
+      while (active < n && i < list.length) {
+        (function (idx) {
+          active++;
+          var p;
+          try { p = fn(list[idx], idx); }
+          catch (e) { finish(idx, undefined); return; }
+          Promise.resolve(p).then(function (v) { finish(idx, v); },
+                                  function () { finish(idx, undefined); });
+        })(i++);
+      }
+    }
+    pump();
+  });
+}
+
+// Attach covers to a list of items; a poster miss never fails the list.
+function _withCovers(items) {
+  var seen = {}, queue = [], i;
+  for (i = 0; i < items.length; i++) {
+    var key = _nameCandidates(items[i].title)[0] || '';
+    items[i]._ck = key;
+    if (key && !seen[key]) { seen[key] = 1; queue.push(items[i].title); }
+  }
+  return _eachLimit(queue, 6, _resolveCover).then(function () {
+    for (var j = 0; j < items.length; j++) {
+      var c = _coverCache[items[j]._ck] || '';
+      if (c) items[j].cover = c;
+      delete items[j]._ck;
+    }
+    return items;
+  }).catch(function () {
+    for (var k = 0; k < items.length; k++) delete items[k]._ck;
+    return items;
+  });
+}
+
 function _releaseUrl(r) {
   return 'nyaa://release/' + r.id + '?h=' + r.hash
     + '&s=' + r.seeders + '&t=' + encodeURIComponent(r.title);
@@ -148,7 +278,7 @@ function search(query, page, opts) {
     var items = _filterSort(_parseRss(xml));
     var out = [];
     for (var i = 0; i < items.length; i++) out.push(_itemOf(items[i]));
-    return out;
+    return _withCovers(out);
   }).catch(function () { return []; });
 }
 
@@ -160,7 +290,9 @@ function getHome(opts) {
     var cards = [];
     for (var i = 0; i < items.length; i++) cards.push(_itemOf(items[i]));
     if (!cards.length) return [];
-    return [{ title: 'Latest Anime Torrents', items: cards }];
+    return _withCovers(cards).then(function (withCov) {
+      return [{ title: 'Latest Anime Torrents', items: withCov }];
+    });
   }).catch(function () { return []; });
 }
 
@@ -185,7 +317,10 @@ function getDetail(url, opts) {
   }];
   base.subCount = kind === 'sub' ? 1 : 0;
   base.dubCount = kind === 'dub' ? 1 : 0;
-  return Promise.resolve(base);
+  return _resolveCover(ref.title).then(function (c) {
+    if (c) base.cover = c;
+    return base;
+  });
 }
 
 function getEpisodes(url, opts) {

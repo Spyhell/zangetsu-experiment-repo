@@ -9,7 +9,7 @@
       "lang": "en",
       "logo": "icons/nyaa.png",
       "type": "anime",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "file": "providers/oppaistream.js",

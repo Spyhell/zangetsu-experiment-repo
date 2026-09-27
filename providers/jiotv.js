@@ -104,7 +104,12 @@ function _resolveStream(slug, st) {
   var url = API + '/api/channels/' + encodeURIComponent(slug) + '/streams/' + st.stream_id + '/resolve';
   var p = _getJson(url).then(function (r) {
     if (!r || !r.resolved_url) return null;
-    var playUrl = r.needs_proxy && r.proxy_url ? API + r.proxy_url : r.resolved_url;
+    // proxy_url is usually a full absolute URL already — only prefix the API
+    // host when it is a bare path, otherwise the URL comes out malformed.
+    var playUrl = r.resolved_url;
+    if (r.needs_proxy && r.proxy_url) {
+      playUrl = /^https?:\/\//i.test(r.proxy_url) ? r.proxy_url : API + r.proxy_url;
+    }
     var entry = {
       url: playUrl,
       container: 'hls',
@@ -127,7 +132,8 @@ function getVideoSources(episodeId) {
   var slug = String(episodeId).replace(/^jiotv:\/\//, '').replace(/\/live$/, '');
   return _getJson(API + '/api/channels/' + encodeURIComponent(slug) + '/streams')
     .then(function (d) {
-      var hls = (d.streams || []).filter(function (st) {
+      var streams = d.streams || [];
+      var hls = streams.filter(function (st) {
         return st && st.type === 'hls' && st.stream_id;
       }).slice(0, 3);
       if (!hls.length) throw new Error('JioTV: no playable HLS stream for ' + slug);

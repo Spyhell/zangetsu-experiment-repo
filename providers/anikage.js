@@ -32,7 +32,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/anikage.png',
     type: 'anime',
-    version: '1.0.3'
+    version: '1.0.4'
   };
 }
 
@@ -191,15 +191,33 @@ function _sourceOf(src, providerId, lang) {
   };
 }
 
+// Race a promise against a timer so a hanging host can never stall the
+// stream list forever. Falls back to the timer value on expiry. If the
+// runtime has no timers, returns the promise unchanged.
+function _raceTimeout(promise, ms, expired) {
+  if (typeof setTimeout !== 'function' || typeof Promise === 'undefined' || !Promise.race) return promise;
+  var t;
+  var timeout = new Promise(function (resolve) {
+    t = setTimeout(function () { resolve(expired); }, ms);
+  });
+  return Promise.race([promise, timeout]).then(function (v) {
+    try { if (typeof clearTimeout === 'function') clearTimeout(t); } catch (e) {}
+    return v;
+  });
+}
+
 // Expand a gateway HLS master playlist into one entry per quality variant so
 // the app's quality/download picker shows real options instead of a lone
 // "auto". Non-playlist responses (or any fetch failure) fall back to the
 // single entry unchanged.
 function _expandAnikage(v) {
   if (!v || v.container !== 'hls') return Promise.resolve([v]);
-  return fetch(v.url, { headers: v.headers }).then(function (r) {
-    var body = String((r && r.body) || '');
-    if (body.indexOf('#EXT-X-STREAM-INF') === -1) return [v];
+  var bodyP = fetch(v.url, { headers: v.headers }).then(function (r) {
+    return String((r && r.body) || '');
+  });
+  bodyP.catch(function () {}); // late failures after a timeout must stay silent
+  return _raceTimeout(bodyP, 5000, '').then(function (body) {
+    if (!body || body.indexOf('#EXT-X-STREAM-INF') === -1) return [v];
     var base = String(v.url).replace(/[^/]*(\?.*)?$/, '');
     var origin = (String(v.url).match(/^(https?:\/\/[^/]+)/) || [])[1] || '';
     var re = /#EXT-X-STREAM-INF:([^\r\n]*)\r?\n([^\r\n]+)/g, m;

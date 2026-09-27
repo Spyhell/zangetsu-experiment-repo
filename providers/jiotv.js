@@ -112,6 +112,7 @@ function _resolveStream(slug, st) {
     }
     var entry = {
       url: playUrl,
+      proxy: !!(r.needs_proxy && r.proxy_url),
       container: 'hls',
       quality: 'auto',
       label: 'Live' + (st.label ? ' ' + st.label.replace(/^Stream\s*/i, '') : '')
@@ -128,6 +129,20 @@ function _resolveStream(slug, st) {
   return _raceTimeout(p, 8000);
 }
 
+// Probe a mirror's playlist: 'ok' (HTTP 2xx + playlist body), 'dead'
+// (HTTP error or 200-but-not-a-playlist), 'unknown' (timeout / network
+// failure — the phone's network may reach what this runtime cannot, so
+// unknown mirrors are kept, never dropped).
+function _probePlaylist(url, headers) {
+  var p = fetch(url, { headers: headers || {} }).then(function (res) {
+    if (!res || !res.ok) return 'dead';
+    return res.text().then(function (t) {
+      return /#EXTM3U/i.test(String(t).slice(0, 400)) ? 'ok' : 'dead';
+    }, function () { return 'unknown'; });
+  }, function () { return 'unknown'; });
+  return _raceTimeout(p, 6000).then(function (v) { return v || 'unknown'; });
+}
+
 function getVideoSources(episodeId) {
   var slug = String(episodeId).replace(/^jiotv:\/\//, '').replace(/\/live$/, '');
   return _getJson(API + '/api/channels/' + encodeURIComponent(slug) + '/streams')
@@ -142,7 +157,26 @@ function getVideoSources(episodeId) {
     .then(function (entries) {
       entries = entries.filter(function (e) { return !!e; });
       if (!entries.length) throw new Error('JioTV: all stream mirrors failed for ' + slug);
-      return entries;
+      // Drop definitively-dead mirrors (HTTP errors, non-playlist bodies) so
+      // the player never opens them first. 'unknown' mirrors are kept.
+      return Promise.all(entries.map(function (e) {
+        return _probePlaylist(e.url, e.headers).then(function (st) { e._probe = st; return e; });
+      }));
+    })
+    .then(function (entries) {
+      var live = entries.filter(function (e) { return e._probe !== 'dead'; });
+      if (!live.length) throw new Error('JioTV: all stream mirrors failed for ' + slug);
+      live.sort(function (a, b) {
+        return (a._probe === 'ok' ? 0 : 1) - (b._probe === 'ok' ? 0 : 1);
+      });
+      var dc = 0, pc = 0;
+      return live.map(function (e) {
+        var tag = e.proxy ? 'Proxy ' + (++pc) : 'Direct ' + (++dc);
+        return {
+          url: e.url, label: tag, quality: 'auto', kind: 'hls',
+          headers: e.headers || {}, audioLang: null, subtitles: []
+        };
+      });
     });
 }
 

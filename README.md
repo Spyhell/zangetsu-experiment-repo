@@ -30,6 +30,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | TheNkiri | Movie | 1.0.0 | Movies & shows. |
 | HentaiOcean | Anime | 1.0.0 | ENG SUB hentai, direct mp4 streams. |
 | Live TV India | Movie | 1.0.0 | 700+ live Indian TV channels (News, Sports, Movies, Music, Kids). |
+| JioTV | Movie | 1.0.0 | 1000+ live JioTV channels (News, Entertainment, Movies, Kids, Music). |
 | World Live TV | Movie | 1.0.0 | Live TV: India + USA + UK (~2,500 channels). |
 | Music Live TV | Movie | 1.0.0 | Live music TV channels worldwide. |
 | SuperCartoons | Movie | 1.0.0 | Classic cartoons, direct mp4. |

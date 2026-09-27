@@ -1,11 +1,8 @@
 # spyhell-repo
 
-
 Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 
-
 ## How users install
-
 
 1. Open the app
 2. **Settings → Sources → Add repo**
@@ -15,13 +12,10 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
    ```
 4. Tap **Install** next to the source you want
 
-
 ## Sources
-
 
 | Source | Type | Version | Notes |
 | --- | --- | --- | --- |
-| Nyaa Anime | Anime | 1.0.3 | Anime torrents from nyaa.si. |
 | Oppai Stream | Anime | 1.0.3 | Direct mp4/webm streams up to 4K. |
 | Hanime | Anime | 1.0.1 | HLS streams 720p/480p/360p. |
 | HentaiMama | Anime | 1.0.0 | HLS streams up to 1080p. |
@@ -36,23 +30,20 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | TheNkiri | Movie | 1.0.0 | Movies & shows. |
 | HentaiOcean | Anime | 1.0.0 | ENG SUB hentai, direct mp4 streams. |
 | Live TV India | Movie | 1.0.0 | 700+ live Indian TV channels (News, Sports, Movies, Music, Kids). |
-| World Live TV | Movie | 1.0.0 | 2500+ live TV channels from India, USA & UK. |
-| Music Live TV | Movie | 1.0.0 | 700+ live music TV channels from around the world. |
-| SuperCartoons | Movie | 1.0.0 | Classic cartoons (Tom & Jerry, Looney Tunes, Popeye); direct mp4 streams. |
-| Kids Live TV | Movie | 1.0.0 | ~400 live kids TV channels from around the world (India first). |
-
+| World Live TV | Movie | 1.0.0 | Live TV: India + USA + UK (~2,500 channels). |
+| Music Live TV | Movie | 1.0.0 | Live music TV channels worldwide. |
+| SuperCartoons | Movie | 1.0.0 | Classic cartoons, direct mp4. |
+| Nyaa Anime | Anime | 1.0.3 | Anime torrents from nyaa.si, ranked by seeders. |
+| Kids Live TV | Movie | 1.0.0 | Live kids TV channels worldwide. |
+| AnimeSuge | Anime | 1.0.0 | Anime streaming with sub & dub, soft subtitles. |
+| Hindi Dub | Anime | 1.0.0 | Hindi-dubbed anime movies & series. |
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.
 
-
 ## The manifest
-
 
 `index.json` at the root lists the sources. When a source changes, bump its `version` in both the `.js` file and its `index.json` entry — installed users will see an update in the app.
 
-
 ## License
 
-
 MIT.
-

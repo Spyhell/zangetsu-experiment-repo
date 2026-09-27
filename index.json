@@ -172,6 +172,15 @@
       "logo": "icons/kidstv.png",
       "type": "movie",
       "version": "1.0.0"
+    },
+    {
+      "id": "animesuge",
+      "name": "AnimeSuge",
+      "file": "providers/animesuge.js",
+      "lang": "en",
+      "logo": "icons/animesuge.png",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

@@ -19,7 +19,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | Oppai Stream | Anime | 1.0.3 | Direct mp4/webm streams up to 4K. |
 | Hanime | Anime | 1.0.1 | HLS streams 720p/480p/360p. |
 | HentaiMama | Anime | 1.0.0 | HLS streams up to 1080p. |
-| Anikage | Anime | 1.0.2 | Anime streaming. |
+| Anikage | Anime | 1.0.3 | Anime streaming. |
 | HentaiTV | Anime | 1.0.0 | Anime streaming. |
 | ToraStream | Movie | 1.0.3 | Movies & TV shows. |
 | Internet Archive | Movie | 1.0.3 | Public-domain films from archive.org. |

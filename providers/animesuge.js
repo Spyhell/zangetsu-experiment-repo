@@ -25,7 +25,7 @@ var PLAYER_RE = /^https?:\/\/(?:[a-z0-9-]+\.)?(?:vidtube\.[a-z]+|megaplay\.[a-z]
 
 function getInfo() {
   return { name: 'AnimeSuge', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/animesuge/images/favicon.png', type: 'anime', version: '1.0.1' };
+    logo: SITE + '/animesuge/images/favicon.png', type: 'anime', version: '1.0.2' };
 }
 
 // ── Pure-JS base64 (encode + decode). Self-contained: the app injects no
@@ -442,6 +442,20 @@ function _extractPlayer(embed, cat) {
 // quality/download picker shows real options (1080p/720p/...) instead of a
 // single "auto". The master stays first as "Auto" (current playback default);
 // anything failing falls back to that lone entry.
+// Race a promise against a timer so a hanging host can never stall the
+// stream list forever. If the runtime has no timers, returns the promise
+// unchanged.
+function _raceTimeout(promise, ms, expired) {
+  if (typeof setTimeout !== 'function' || typeof Promise === 'undefined' || !Promise.race) return promise;
+  var t;
+  var timeout = new Promise(function (resolve) {
+    t = setTimeout(function () { resolve(expired); }, ms);
+  });
+  return Promise.race([promise, timeout]).then(function (v) {
+    try { if (typeof clearTimeout === 'function') clearTimeout(t); } catch (e) {}
+    return v;
+  });
+}
 function _expandQualities(masterUrl, hdrs, cat, subs) {
   function autoEntry(ct) {
     return { url: masterUrl, quality: 'Auto', container: ct, headers: hdrs,
@@ -450,9 +464,10 @@ function _expandQualities(masterUrl, hdrs, cat, subs) {
   if (!/\.m3u8(\?|$)/i.test(String(masterUrl))) {
     return Promise.resolve([autoEntry('mp4')]);
   }
-  return fetch(masterUrl, { headers: { 'User-Agent': UA, 'Referer': hdrs.Referer } })
-    .then(function (r) {
-      var body = String((r && r.body) || '');
+  var bodyP = fetch(masterUrl, { headers: { 'User-Agent': UA, 'Referer': hdrs.Referer } })
+    .then(function (r) { return String((r && r.body) || ''); });
+  bodyP.catch(function () {}); // late failures after a timeout must stay silent
+  return _raceTimeout(bodyP, 5000, '').then(function (body) {
       if (body.indexOf('#EXT-X-STREAM-INF') === -1) return [autoEntry('hls')];
       var base = String(masterUrl).replace(/[^/]*(\?.*)?$/, '');
       var origin = (String(masterUrl).match(/^(https?:\/\/[^/]+)/) || [])[1] || '';

@@ -69,27 +69,35 @@ function _prettySlug(slug) {
   }).join(' ');
 }
 
+function _detailFor(id, ch) {
+  var d = {
+    id: id, title: ch.name, url: id, type: 'movie',
+    description: 'Live TV' + (ch.category ? ' • ' + ch.category : '') +
+      (ch.language ? ' • ' + ch.language.toUpperCase() : ''),
+    episodes: [{ id: id + '/live', title: 'Live', url: id + '/live', number: 1 }]
+  };
+  if (ch.logo) d.cover = ch.logo;
+  if (ch.category) d.genres = [ch.category];
+  return d;
+}
+
 function getDetail(id) {
-  var slug = String(id).replace(/^jiotv:\/\//, '');
+  var slug = String(id).replace(/^jiotv:\/\//, '').replace(/\/live$/, '');
+  id = 'jiotv://' + slug;
   var ch = _chanBySlug[slug];
-  if (ch) {
-    var d = { id: id, title: ch.name, type: 'movie' };
-    if (ch.logo) d.cover = ch.logo;
-    if (ch.category) d.genres = [ch.category];
-    return Promise.resolve(d);
-  }
+  if (ch) return Promise.resolve(_detailFor(id, ch));
   // Not seen in this session: try a quick targeted search, else a minimal card.
   return _getJson(API + '/api/jiotv/channels?per_page=10&q=' + encodeURIComponent(slug.replace(/-/g, ' ')))
     .then(function (r) {
       var hit = (r.channels || [])[0];
-      if (hit) { _remember(hit); return getDetail('jiotv://' + hit.slug); }
-      return { id: id, title: _prettySlug(slug), type: 'movie' };
+      if (hit) { _remember(hit); return _detailFor('jiotv://' + hit.slug, hit); }
+      return _detailFor(id, { name: _prettySlug(slug), slug: slug });
     })
-    .catch(function () { return { id: id, title: _prettySlug(slug), type: 'movie' }; });
+    .catch(function () { return _detailFor(id, { name: _prettySlug(slug), slug: slug }); });
 }
 
 function getEpisodes(id) {
-  return Promise.resolve([{ id: id + '#live', number: 1, title: 'Live' }]);
+  return getDetail(id).then(function (d) { return d.episodes || []; });
 }
 
 function _resolveStream(slug, st) {
@@ -116,7 +124,7 @@ function _resolveStream(slug, st) {
 }
 
 function getVideoSources(episodeId) {
-  var slug = String(episodeId).replace(/^jiotv:\/\//, '').replace(/#live$/, '');
+  var slug = String(episodeId).replace(/^jiotv:\/\//, '').replace(/\/live$/, '');
   return _getJson(API + '/api/channels/' + encodeURIComponent(slug) + '/streams')
     .then(function (d) {
       var hls = (d.streams || []).filter(function (st) {

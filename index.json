@@ -181,15 +181,6 @@
       "logo": "icons/animesuge.png",
       "type": "anime",
       "version": "1.0.2"
-    },
-    {
-      "file": "providers/jiotv.js",
-      "id": "jiotv",
-      "lang": "en",
-      "logo": "icons/jiotv.png",
-      "name": "JioTV",
-      "type": "movie",
-      "version": "1.0.4"
     }
   ]
 }

@@ -35,7 +35,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | SuperCartoons | Movie | 1.0.0 | Classic cartoons, direct mp4. |
 | Nyaa Anime | Anime | 1.0.3 | Anime torrents from nyaa.si, ranked by seeders. |
 | Kids Live TV | Movie | 1.0.0 | Live kids TV channels worldwide. |
-| AnimeSuge | Anime | 1.0.0 | Anime streaming with sub & dub, soft subtitles. |
+| AnimeSuge | Anime | 1.0.1 | Anime streaming with sub & dub, soft subtitles. |
 | Hindi Dub | Anime | 1.0.0 | Hindi-dubbed anime movies & series. |
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

@@ -151,7 +151,12 @@ function getVideoSources(episodeId) {
       var hls = streams.filter(function (st) {
         return st && st.type === 'hls' && st.stream_id;
       }).slice(0, 3);
-      if (!hls.length) throw new Error('JioTV: no playable HLS stream for ' + slug);
+      if (!hls.length) {
+        var drmOnly = streams.some(function (st) { return st && st.type === 'dash'; });
+        throw new Error(drmOnly
+          ? 'JioTV: ' + slug + ' is DRM-protected and cannot be played in this app'
+          : 'JioTV: no playable HLS stream for ' + slug);
+      }
       return Promise.all(hls.map(function (st) { return _resolveStream(slug, st); }));
     })
     .then(function (entries) {

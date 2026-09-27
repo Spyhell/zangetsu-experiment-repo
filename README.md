@@ -1,8 +1,11 @@
 # spyhell-repo
 
+
 Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 
+
 ## How users install
+
 
 1. Open the app
 2. **Settings → Sources → Add repo**
@@ -12,7 +15,9 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
    ```
 4. Tap **Install** next to the source you want
 
+
 ## Sources
+
 
 | Source | Type | Version | Notes |
 | --- | --- | --- | --- |
@@ -34,13 +39,20 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | World Live TV | Movie | 1.0.0 | 2500+ live TV channels from India, USA & UK. |
 | Music Live TV | Movie | 1.0.0 | 700+ live music TV channels from around the world. |
 | SuperCartoons | Movie | 1.0.0 | Classic cartoons (Tom & Jerry, Looney Tunes, Popeye); direct mp4 streams. |
+| Kids Live TV | Movie | 1.0.0 | ~400 live kids TV channels from around the world (India first). |
+
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.
 
+
 ## The manifest
+
 
 `index.json` at the root lists the sources. When a source changes, bump its `version` in both the `.js` file and its `index.json` entry — installed users will see an update in the app.
 
+
 ## License
 
+
 MIT.
+

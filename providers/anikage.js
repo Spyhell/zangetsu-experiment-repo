@@ -32,7 +32,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/anikage.png',
     type: 'anime',
-    version: '1.0.2'
+    version: '1.0.3'
   };
 }
 
@@ -191,6 +191,50 @@ function _sourceOf(src, providerId, lang) {
   };
 }
 
+// Expand a gateway HLS master playlist into one entry per quality variant so
+// the app's quality/download picker shows real options instead of a lone
+// "auto". Non-playlist responses (or any fetch failure) fall back to the
+// single entry unchanged.
+function _expandAnikage(v) {
+  if (!v || v.container !== 'hls') return Promise.resolve([v]);
+  return fetch(v.url, { headers: v.headers }).then(function (r) {
+    var body = String((r && r.body) || '');
+    if (body.indexOf('#EXT-X-STREAM-INF') === -1) return [v];
+    var base = String(v.url).replace(/[^/]*(\?.*)?$/, '');
+    var origin = (String(v.url).match(/^(https?:\/\/[^/]+)/) || [])[1] || '';
+    var re = /#EXT-X-STREAM-INF:([^\r\n]*)\r?\n([^\r\n]+)/g, m;
+    var vars = [], seen = {};
+    while ((m = re.exec(body)) !== null) {
+      var uri = m[2].trim();
+      if (!uri || uri.charAt(0) === '#') continue;
+      var url = uri;
+      if (!/^https?:\/\//i.test(uri)) url = (uri.charAt(0) === '/') ? origin + uri : base + uri;
+      if (seen[url]) continue; seen[url] = 1;
+      var hm = m[1].match(/RESOLUTION=\d+x(\d+)/i);
+      var bw = m[1].match(/BANDWIDTH=(\d+)/i);
+      vars.push({ url: url, h: hm ? parseInt(hm[1], 10) : 0, bw: bw ? parseInt(bw[1], 10) : 0 });
+    }
+    if (!vars.length) return [v];
+    vars.sort(function (a, b) { return (b.h - a.h) || (b.bw - a.bw); });
+    var out = [v], i, e, q;
+    for (i = 0; i < vars.length; i++) {
+      e = vars[i];
+      q = e.h ? (e.h + 'p') : 'Auto';
+      out.push({
+        url: e.url,
+        quality: q,
+        label: v.label + ' · ' + q,
+        container: 'hls',
+        headers: v.headers,
+        kind: v.kind,
+        audioLang: v.audioLang,
+        subtitles: v.subtitles
+      });
+    }
+    return out;
+  }).catch(function () { return [v]; });
+}
+
 // ── public API ───────────────────────────────────────────────────────────────
 
 function search(query) {
@@ -284,12 +328,16 @@ function getVideoSources(episodeUrl) {
         _getJson(url).then(function (d) {
           var subs = (d.subtitles || []).filter(function (s) { return s && s.file; })
             .map(_subtitleOf);
-          return (d.sources || []).filter(function (s) { return s && s.url; })
-            .map(function (s) {
-              var v = _sourceOf(s, p, lang);
-              v.subtitles = subs;
-              return v;
-            });
+          var srcs = (d.sources || []).filter(function (s) { return s && s.url; });
+          return Promise.all(srcs.map(function (s) {
+            var v = _sourceOf(s, p, lang);
+            v.subtitles = subs;
+            return _expandAnikage(v);
+          })).then(function (lists) {
+            var flat = [];
+            lists.forEach(function (l) { l.forEach(function (e) { flat.push(e); }); });
+            return flat;
+          });
         }).catch(function () { return []; })
       );
     });

@@ -25,7 +25,7 @@ var PLAYER_RE = /^https?:\/\/(?:[a-z0-9-]+\.)?(?:vidtube\.[a-z]+|megaplay\.[a-z]
 
 function getInfo() {
   return { name: 'AnimeSuge', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/animesuge/images/favicon.png', type: 'anime', version: '1.0.0' };
+    logo: SITE + '/animesuge/images/favicon.png', type: 'anime', version: '1.0.1' };
 }
 
 // ── Pure-JS base64 (encode + decode). Self-contained: the app injects no
@@ -434,9 +434,50 @@ function _extractPlayer(embed, cat) {
           format: /\.srt(\?|$)/i.test(t.file) ? 'srt' : 'vtt', 'default': !!t['default'] });
       }
       var hdrs = { 'User-Agent': UA, 'Referer': base + '/', 'Origin': base };
-      return [{ url: file, quality: 'auto',
-        container: /\.m3u8(\?|$)/i.test(file) ? 'hls' : 'mp4',
-        headers: hdrs, kind: cat, audioLang: cat === 'dub' ? 'en' : 'ja', subtitles: subs }];
+      return _expandQualities(file, hdrs, cat, subs);
     });
   });
+}
+// Expand a master.m3u8 into one stream entry per quality variant so the app's
+// quality/download picker shows real options (1080p/720p/...) instead of a
+// single "auto". The master stays first as "Auto" (current playback default);
+// anything failing falls back to that lone entry.
+function _expandQualities(masterUrl, hdrs, cat, subs) {
+  function autoEntry(ct) {
+    return { url: masterUrl, quality: 'Auto', container: ct, headers: hdrs,
+      kind: cat, audioLang: cat === 'dub' ? 'en' : 'ja', subtitles: subs };
+  }
+  if (!/\.m3u8(\?|$)/i.test(String(masterUrl))) {
+    return Promise.resolve([autoEntry('mp4')]);
+  }
+  return fetch(masterUrl, { headers: { 'User-Agent': UA, 'Referer': hdrs.Referer } })
+    .then(function (r) {
+      var body = String((r && r.body) || '');
+      if (body.indexOf('#EXT-X-STREAM-INF') === -1) return [autoEntry('hls')];
+      var base = String(masterUrl).replace(/[^/]*(\?.*)?$/, '');
+      var origin = (String(masterUrl).match(/^(https?:\/\/[^/]+)/) || [])[1] || '';
+      var re = /#EXT-X-STREAM-INF:([^\r\n]*)\r?\n([^\r\n]+)/g, m;
+      var vars = [], seen = {};
+      while ((m = re.exec(body)) !== null) {
+        var uri = m[2].trim();
+        if (!uri || uri.charAt(0) === '#') continue;
+        var url = uri;
+        if (!/^https?:\/\//i.test(uri)) url = (uri.charAt(0) === '/') ? origin + uri : base + uri;
+        if (seen[url]) continue; seen[url] = 1;
+        var hm = m[1].match(/RESOLUTION=\d+x(\d+)/i);
+        var bw = m[1].match(/BANDWIDTH=(\d+)/i);
+        vars.push({ url: url, h: hm ? parseInt(hm[1], 10) : 0, bw: bw ? parseInt(bw[1], 10) : 0 });
+      }
+      if (!vars.length) return [autoEntry('hls')];
+      vars.sort(function (a, b) { return (b.h - a.h) || (b.bw - a.bw); });
+      var out = [autoEntry('hls')], i, v;
+      for (i = 0; i < vars.length; i++) {
+        v = vars[i];
+        out.push({ url: v.url, quality: v.h ? (v.h + 'p') : 'Auto',
+          container: 'hls', headers: hdrs,
+          kind: cat, audioLang: cat === 'dub' ? 'en' : 'ja', subtitles: subs });
+      }
+      return out;
+    })
+    .catch(function () { return [autoEntry('hls')]; });
 }

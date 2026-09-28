@@ -1,8 +1,11 @@
 # spyhell-repo
 
+
 Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 
+
 ## How users install
+
 
 1. Open the app
 2. **Settings → Sources → Add repo**
@@ -12,7 +15,9 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
    ```
 4. Tap **Install** next to the source you want
 
+
 ## Sources
+
 
 | Source | Type | Version | Notes |
 | --- | --- | --- | --- |
@@ -39,13 +44,20 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | EZTV | Movie | 1.0.0 | TV series torrents, ranked by seeders. |
 | AnimeTosho | Anime | 1.0.0 | Anime torrent index, magnet streams. |
 | Hindi Dub | Anime | 1.0.0 | Hindi-dubbed anime movies & series. |
+| AnimeX | Anime | 1.0.0 | Anime streaming from pp.animex.one. |
+
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.
 
+
 ## The manifest
+
 
 `index.json` at the root lists the sources. When a source changes, bump its `version` in both the `.js` file and its `index.json` entry — installed users will see an update in the app.
 
+
 ## License
 
+
 MIT.
+

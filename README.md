@@ -44,7 +44,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | EZTV | Movie | 1.0.0 | TV series torrents, ranked by seeders. |
 | AnimeTosho | Anime | 1.0.0 | Anime torrent index, magnet streams. |
 | Hindi Dub | Anime | 1.0.0 | Hindi-dubbed anime movies & series. |
-| AnimeX | Anime | 1.0.0 | Anime streaming from pp.animex.one. |
+| AnimeX | Anime | 1.0.1 | Anime streaming from pp.animex.one. |
 
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

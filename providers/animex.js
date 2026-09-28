@@ -8,7 +8,7 @@ var API = 'https://animex.one';
 var PP = 'https://pp.animex.one';
 var ANILIST = 'https://graphql.anilist.co';
 var UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36';
-var VERSION = '1.0.0';
+var VERSION = '1.0.1';
 
 function getInfo() {
   return {
@@ -252,36 +252,40 @@ function _expandQualities(masterUrl, hdrs, kind, subs, tag) {
 }
 
 // ---------- video sources ----------
-function _providerSources(pid, slug, ep, kind) {
+function _providerSources(pid, slug, ep, kind, attempt) {
   var u = PP + '/rest/api/sources?id=' + encodeURIComponent(slug) +
     '&epNum=' + encodeURIComponent(ep) +
     '&type=' + kind + '&providerId=' + encodeURIComponent(pid);
   return _getJson(u).then(function (d) {
     var srcs = (d && d.sources) || [];
     if (!srcs.length || !srcs[0].url) throw new Error('AnimeX: empty sources');
-    var hdrs = { 'User-Agent': UA };
     var dh = (d && d.headers) || {};
+    var hdrs = { 'User-Agent': dh['User-Agent'] || UA };
     if (dh.Referer) hdrs.Referer = dh.Referer;
     if (dh.Origin) hdrs.Origin = dh.Origin;
     var subs = _mapSubs(d.tracks || []);
     var tag = (kind === 'dub' ? 'DUB' : 'SUB') + ' [' + pid + ']';
     return _expandQualities(String(srcs[0].url), hdrs, kind, subs, tag);
+  }).catch(function (e) {
+    if (!attempt) return _providerSources(pid, slug, ep, kind, 1); // one retry
+    throw e;
   });
 }
 
-// Try providers in order (default first); first one with real sources wins.
-function _firstWorking(providers, slug, ep, kind) {
+// Query every provider in parallel; keep entries from all that succeed
+// (default provider first). Different providers use different CDNs, so if
+// one CDN is unreachable from the device, another entry may still play.
+function _collectAll(providers, slug, ep, kind) {
   var sorted = (providers || []).slice().sort(function (a, b) {
     return ((b && b.default) ? 1 : 0) - ((a && a.default) ? 1 : 0);
   });
-  var chain = Promise.resolve(null);
-  sorted.forEach(function (p) {
-    chain = chain.then(function (got) {
-      if (got) return got;
-      return _providerSources(p.id, slug, ep, kind).catch(function () { return null; });
-    });
+  return Promise.all(sorted.map(function (p) {
+    return _providerSources(p.id, slug, ep, kind, 0).catch(function () { return null; });
+  })).then(function (results) {
+    var out = [];
+    results.forEach(function (entries) { if (entries) out = out.concat(entries); });
+    return out.length ? out : null;
   });
-  return chain;
 }
 
 function getVideoSources(episodeUrl) {
@@ -292,8 +296,8 @@ function getVideoSources(episodeUrl) {
   var surl = PP + '/rest/api/servers?id=' + encodeURIComponent(slug) +
     '&epNum=' + encodeURIComponent(ep);
   return _getJson(surl).then(function (sv) {
-    var subP = _firstWorking(sv.subProviders, slug, ep, 'sub');
-    var dubP = _firstWorking(sv.dubProviders, slug, ep, 'dub');
+    var subP = _collectAll(sv.subProviders, slug, ep, 'sub');
+    var dubP = _collectAll(sv.dubProviders, slug, ep, 'dub');
     return Promise.all([subP, dubP]).then(function (res) {
       var out = [];
       if (res[0]) out = out.concat(res[0]);

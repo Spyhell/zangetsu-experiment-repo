@@ -25,7 +25,7 @@ var PLAYER_RE = /^https?:\/\/(?:[a-z0-9-]+\.)?(?:vidtube\.[a-z]+|megaplay\.[a-z]
 
 function getInfo() {
   return { name: 'AnimeSuge', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/animesuge/images/favicon.png', type: 'anime', version: '1.0.2' };
+    logo: SITE + '/animesuge/images/favicon.png', type: 'anime', version: '1.0.3' };
 }
 
 // ── Pure-JS base64 (encode + decode). Self-contained: the app injects no
@@ -389,7 +389,21 @@ function getVideoSources(episodeUrl) {
     }
     if (!want.length) want = servers;
     want.sort(function (a, b) { return _srvRank(a.name) - _srvRank(b.name); });
-    return _tryServers(want, 0, cat);
+    // List streams from EVERY working server, tagged by server name — the way
+    // AnimeX v1.0.1 fixed its own flakiness. A dead default server no longer
+    // kills the whole list; the user just picks another server's entry.
+    var jobs = want.map(function (srv) { return _resolveServer(srv, cat); });
+    return Promise.all(jobs).then(function (lists) {
+      var out = [], seen = {};
+      lists.forEach(function (l) {
+        (l || []).forEach(function (v) {
+          if (!v || !v.url || seen[v.url]) return;
+          seen[v.url] = 1; out.push(v);
+        });
+      });
+      if (!out.length) return Promise.reject(new Error('AnimeSuge: no playable server'));
+      return out;
+    });
   });
 }
 // Resolve servers in preference order; take the first that yields a known
@@ -403,12 +417,25 @@ function _tryServers(list, i, cat) {
     return _tryServers(list, i + 1, cat);
   }).catch(function () { return _tryServers(list, i + 1, cat); });
 }
+// Resolve one server to its stream entries, tagged with the server name.
+// Never rejects: a dead server just contributes nothing.
+function _resolveServer(srv, cat) {
+  var tag = String((srv && srv.name) || 'server').trim() || 'server';
+  var p = _ajax('/ajax/server?get=' + encodeURIComponent(srv.linkId)).then(function (j) {
+    var url = j && j.result && j.result.url;
+    if (!url || !PLAYER_RE.test(url)) return [];
+    return _extractPlayer(url, cat, tag);
+  });
+  p = p.catch(function () { return []; });
+  // A hanging embed host must never stall the whole list.
+  return _raceTimeout(p, 15000, []);
+}
 // The sub/hsub/dub cut an embed URL was issued for.
 function _cutOf(embed) {
   return (String(embed || '').match(/\/(sub|hsub|dub)\/?(?:[?#]|$)/i) || [])[1] || null;
 }
 // Embed page -> data-id -> getSources(New) (m3u8 + subtitle tracks).
-function _extractPlayer(embed, cat) {
+function _extractPlayer(embed, cat, tag) {
   var base = (String(embed).match(/^(https?:\/\/[^/]+)/) || [])[1] || 'https://megaplay.buzz';
   // Sources are keyed by the embed's data-id — the audio comes from `type`, so
   // carry over the cut this embed was issued for or a dub request comes back
@@ -434,7 +461,7 @@ function _extractPlayer(embed, cat) {
           format: /\.srt(\?|$)/i.test(t.file) ? 'srt' : 'vtt', 'default': !!t['default'] });
       }
       var hdrs = { 'User-Agent': UA, 'Referer': base + '/', 'Origin': base };
-      return _expandQualities(file, hdrs, cat, subs);
+      return _expandQualities(file, hdrs, cat, subs, tag);
     });
   });
 }
@@ -456,9 +483,13 @@ function _raceTimeout(promise, ms, expired) {
     return v;
   });
 }
-function _expandQualities(masterUrl, hdrs, cat, subs) {
+function _expandQualities(masterUrl, hdrs, cat, subs, tag) {
+  // Tag every entry with its server (e.g. [Vidstream]) so the user can tell
+  // which server each stream came from and try another if one is flaky.
+  var suffix = tag ? ' [' + tag + ']' : '';
   function autoEntry(ct) {
-    return { url: masterUrl, quality: 'Auto', container: ct, headers: hdrs,
+    return { url: masterUrl, quality: 'Auto', label: 'Auto' + suffix,
+      container: ct, headers: hdrs,
       kind: cat, audioLang: cat === 'dub' ? 'en' : 'ja', subtitles: subs };
   }
   if (!/\.m3u8(\?|$)/i.test(String(masterUrl))) {
@@ -489,6 +520,7 @@ function _expandQualities(masterUrl, hdrs, cat, subs) {
       for (i = 0; i < vars.length; i++) {
         v = vars[i];
         out.push({ url: v.url, quality: v.h ? (v.h + 'p') : 'Auto',
+          label: (v.h ? (v.h + 'p') : 'Auto') + suffix,
           container: 'hls', headers: hdrs,
           kind: cat, audioLang: cat === 'dub' ? 'en' : 'ja', subtitles: subs });
       }

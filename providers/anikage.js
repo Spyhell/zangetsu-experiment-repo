@@ -20,10 +20,14 @@ var _JHEADERS = {
   Origin: _SITE
 };
 
-// Providers known to the site's /servers endpoint. `neko` serves segments
-// wrapped in a fake PNG header (needs a stripping proxy the app doesn't
-// have), so it is NOT in the default list.
-var _KNOWN_PROVIDERS = ['koto', 'kiwi', 'wave', 'megg', 'suge', 'dib', 'zen', 'uwu', 'neko'];
+// Every provider the site's /servers endpoint knows about. All of them are
+// queried for every episode (each is a different video network, so a flaky
+// default CDN no longer kills the list). `neko` serves segments wrapped in a
+// fake PNG header (needs a stripping proxy the app doesn't have), so it stays
+// OUT of the default list.
+var _ALL_PROVIDERS = ['koto', 'kiwi', 'wave', 'megg', 'suge', 'dib', 'zen', 'uwu'];
+var _KNOWN_PROVIDERS = _ALL_PROVIDERS.concat(['neko']);
+var _OLD_DEFAULT = 'koto,kiwi,wave';
 
 function getInfo() {
   return {
@@ -32,7 +36,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/anikage.png',
     type: 'anime',
-    version: '1.0.4'
+    version: '1.0.5'
   };
 }
 
@@ -40,9 +44,9 @@ function getSettings() {
   return [
     {
       key: 'providers',
-      label: 'Stream providers (comma-separated)',
+      label: 'Stream providers (comma-separated, all queried by default)',
       type: 'text',
-      default: 'koto,kiwi,wave'
+      default: 'koto,kiwi,wave,megg,suge,dib,zen,uwu'
     },
     {
       key: 'includeDub',
@@ -101,7 +105,10 @@ function _int(v, dflt) {
 }
 
 function _providers() {
-  var raw = _str(_settings().providers, 'koto,kiwi,wave').toLowerCase();
+  var raw = _str(_settings().providers, _ALL_PROVIDERS.join(',')).toLowerCase();
+  // Migrate installs that kept the old 3-provider default: the old value was
+  // never a deliberate choice, it was just the default they shipped with.
+  if (raw === _OLD_DEFAULT) raw = _ALL_PROVIDERS.join(',');
   var list = raw.split(/[,\s]+/).map(function (p) { return p.trim(); })
     .filter(function (p) { return p && _KNOWN_PROVIDERS.indexOf(p) >= 0; });
   return list.length ? list : ['koto'];

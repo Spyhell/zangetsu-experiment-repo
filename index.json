@@ -216,7 +216,7 @@
    "lang": "en",
    "logo": "icons/bitsearch.png",
    "type": "movie",
-   "version": "1.0.0"
+   "version": "1.0.1"
   },
   {
    "id": "thepiratebay",
@@ -225,7 +225,7 @@
    "lang": "en",
    "logo": "icons/thepiratebay.png",
    "type": "movie",
-   "version": "1.0.0"
+   "version": "1.0.1"
   }
  ]
 }

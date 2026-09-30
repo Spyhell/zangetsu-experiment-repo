@@ -8,6 +8,11 @@
  * Stream URLs are signed and expire (~24h), so getVideoSources always
  * resolves them fresh — never cache them.
  *
+ * v1.0.1: the API now answers mode:'proxy', direct:false and the CDN edge
+ * refuses direct hits (429). Streams are played through the site's own
+ * /api/proxy/video?url=… (302 → streaming worker), exactly like its web
+ * player does. Subtitles come from the top-level `captions` array.
+ *
  * Home rows mirror the site's OTT platform rails: Trending, Netflix,
  * Prime Video, Crunchyroll (anime).
  */
@@ -31,7 +36,7 @@ function getInfo() {
     baseUrl: _base(),
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/netmirror.png',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -234,13 +239,19 @@ function getVideoSources(episodeUrl) {
   var q = '?type=' + p.kind + (p.kind === 'tv' ? '&se=' + p.season + '&ep=' + p.episode : '');
   return _getJson(_base() + '/api/embed-tmdb/' + p.tmdbId + q, 'streams').then(function (d) {
     if (!d || !d.ok) throw new Error('no streams');
+    if (d.noSource) throw new Error('NetMirror: ' + (d.error || 'no source for this title yet'));
     var subs = _subs(d.captions);
     var streams = (d.streams || [])
       .filter(function (s) { return s && /^https?:\/\//i.test(s.url); })
       .map(function (s) {
         var res = parseInt(s.resolution, 10) || 0;
+        // The API now answers mode:'proxy', direct:false — the CDN edge
+        // refuses direct hits (HTTP 429), so play through the site's own
+        // proxy exactly like its web player does. The player follows the
+        // 302 to the streaming worker.
+        var playUrl = _base() + '/api/proxy/video?url=' + encodeURIComponent(s.url);
         return {
-          url: s.url,
+          url: playUrl,
           quality: res ? (res + 'p') : undefined,
           label: 'NetMirror · ' + (res ? res + 'p' : 'Auto'),
           container: 'mp4',

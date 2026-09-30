@@ -47,6 +47,8 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | AnimeX | Anime | 1.0.1 | Anime streaming from pp.animex.one. |
 | BitSearch | Movie | 1.0.0 | Movie/series torrent search, ranked by seeders. |
 | ThePirateBay | Movie | 1.0.0 | Movie/series torrents via TPB, ranked by seeders. |
+| ARTE TV | Movie | 1.0.0 | European documentaries, concerts & films from arte.tv (keyless, HLS). |
+| Pluto TV | Movie | 1.0.0 | 400+ free linear channels: movies, comedy, kids, news, sports. |
 
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

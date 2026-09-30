@@ -226,6 +226,24 @@
       "logo": "icons/thepiratebay.png",
       "type": "movie",
       "version": "1.0.1"
+    },
+    {
+      "id": "artetv",
+      "name": "ARTE TV",
+      "file": "providers/artetv.js",
+      "lang": "en",
+      "logo": "icons/artetv.png",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "id": "plutotv",
+      "name": "Pluto TV",
+      "file": "providers/plutotv.js",
+      "lang": "en",
+      "logo": "icons/plutotv.png",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

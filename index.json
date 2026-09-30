@@ -244,6 +244,15 @@
       "logo": "icons/plutotv.png",
       "type": "movie",
       "version": "1.0.0"
+    },
+    {
+      "id": "netmirror",
+      "name": "NetMirror",
+      "file": "providers/netmirror.js",
+      "lang": "en",
+      "logo": "icons/netmirror.png",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

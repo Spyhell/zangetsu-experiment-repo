@@ -49,6 +49,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | ThePirateBay | Movie | 1.0.0 | Movie/series torrents via TPB, ranked by seeders. |
 | ARTE TV | Movie | 1.0.0 | European documentaries, concerts & films from arte.tv (keyless, HLS). |
 | Pluto TV | Movie | 1.0.0 | 400+ free linear channels: movies, comedy, kids, news, sports. |
+| NetMirror | Movie | 1.0.0 | Movies & TV series, OTT-platform rows (Netflix, Prime Video, Crunchyroll), 360p-1080p MP4 + subtitles. |
 
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

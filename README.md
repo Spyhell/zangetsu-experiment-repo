@@ -53,7 +53,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | VidFast | Movie | 1.0.0 | Movies & TV series via multi-server HLS resolver (TMDB-keyed), subtitles. |
 | KissKH | Anime | 1.0.0 | Asian dramas & movies with EN subtitles, direct MP4 streams. |
 | DesiDub Anime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, HLS streams via VidMoly. |
-| Orphaned Films | Movie | 1.0.1 | Curated public-domain & forgotten films (Film Noir, Silent, Sci-Fi/Horror, VHS Vault), direct archive.org MP4. |
+| Orphaned Films | Movie | 1.0.2 | Curated public-domain & forgotten films (Film Noir, Silent, Sci-Fi/Horror, VHS Vault), direct archive.org MP4. |
 
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

@@ -271,6 +271,15 @@
       "name": "KissKH",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/desidubanime.js",
+      "id": "desidubanime",
+      "lang": "en",
+      "logo": "icons/desidubanime.png",
+      "name": "DesiDub Anime",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

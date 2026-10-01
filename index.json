@@ -3,11 +3,11 @@
   "name": "spyhell-repo",
   "sources": [
     {
-      "id": "nyaa",
-      "name": "Nyaa Anime",
       "file": "providers/nyaa.js",
+      "id": "nyaa",
       "lang": "en",
       "logo": "icons/nyaa.png",
+      "name": "Nyaa Anime",
       "type": "anime",
       "version": "1.0.3"
     },
@@ -39,20 +39,20 @@
       "version": "1.0.0"
     },
     {
-      "id": "torastream",
-      "name": "ToraStream",
       "file": "providers/torastream.js",
+      "id": "torastream",
       "lang": "en",
       "logo": "icons/torastream.png",
+      "name": "ToraStream",
       "type": "movie",
       "version": "1.0.3"
     },
     {
-      "id": "anikage",
-      "name": "Anikage",
       "file": "providers/anikage.js",
+      "id": "anikage",
       "lang": "en",
       "logo": "icons/anikage.png",
+      "name": "Anikage",
       "type": "anime",
       "version": "1.0.5"
     },
@@ -102,29 +102,29 @@
       "version": "1.0.3"
     },
     {
-      "id": "cinestream",
-      "name": "CineStream",
       "file": "providers/cinestream.js",
+      "id": "cinestream",
       "lang": "en",
       "logo": "icons/cinestream.png",
+      "name": "CineStream",
       "type": "movie",
       "version": "1.0.4"
     },
     {
-      "id": "thenkiri",
-      "name": "TheNkiri",
-      "lang": "en",
-      "type": "movie",
       "file": "providers/thenkiri.js",
+      "id": "thenkiri",
+      "lang": "en",
       "logo": "icons/thenkiri.png",
+      "name": "TheNkiri",
+      "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "hentaiocean",
-      "name": "HentaiOcean",
       "file": "providers/hentaiocean.js",
+      "id": "hentaiocean",
       "lang": "en",
       "logo": "icons/hentaiocean.png",
+      "name": "HentaiOcean",
       "type": "anime",
       "version": "1.0.0"
     },
@@ -147,112 +147,130 @@
       "version": "1.0.0"
     },
     {
-      "id": "musictv",
-      "name": "Music Live TV",
       "file": "providers/musictv.js",
+      "id": "musictv",
       "lang": "en",
       "logo": "icons/musictv.png",
+      "name": "Music Live TV",
       "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "supercartoons",
-      "name": "SuperCartoons",
       "file": "providers/supercartoons.js",
+      "id": "supercartoons",
       "lang": "en",
       "logo": "icons/supercartoons.png",
+      "name": "SuperCartoons",
       "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "kidstv",
-      "name": "Kids Live TV",
       "file": "providers/kidstv.js",
+      "id": "kidstv",
       "lang": "en",
       "logo": "icons/kidstv.png",
+      "name": "Kids Live TV",
       "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "animesuge",
-      "name": "AnimeSuge",
       "file": "providers/animesuge.js",
+      "id": "animesuge",
       "lang": "en",
       "logo": "icons/animesuge.png",
+      "name": "AnimeSuge",
       "type": "anime",
       "version": "1.0.3"
     },
     {
-      "id": "eztv",
-      "name": "EZTV",
       "file": "providers/eztv.js",
+      "id": "eztv",
       "lang": "en",
       "logo": "icons/eztv.png",
+      "name": "EZTV",
       "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "animetosho",
-      "name": "AnimeTosho",
       "file": "providers/animetosho.js",
+      "id": "animetosho",
       "lang": "en",
       "logo": "icons/animetosho.png",
+      "name": "AnimeTosho",
       "type": "anime",
       "version": "1.0.0"
     },
     {
-      "id": "animex",
-      "name": "AnimeX",
       "file": "providers/animex.js",
+      "id": "animex",
       "lang": "en",
       "logo": "icons/animex.png",
+      "name": "AnimeX",
       "type": "anime",
       "version": "1.0.1"
     },
     {
-      "id": "bitsearch",
-      "name": "BitSearch",
       "file": "providers/bitsearch.js",
+      "id": "bitsearch",
       "lang": "en",
       "logo": "icons/bitsearch.png",
+      "name": "BitSearch",
       "type": "movie",
       "version": "1.0.1"
     },
     {
-      "id": "thepiratebay",
-      "name": "ThePirateBay",
       "file": "providers/thepiratebay.js",
+      "id": "thepiratebay",
       "lang": "en",
       "logo": "icons/thepiratebay.png",
+      "name": "ThePirateBay",
       "type": "movie",
       "version": "1.0.1"
     },
     {
-      "id": "artetv",
-      "name": "ARTE TV",
       "file": "providers/artetv.js",
+      "id": "artetv",
       "lang": "en",
       "logo": "icons/artetv.png",
+      "name": "ARTE TV",
       "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "plutotv",
-      "name": "Pluto TV",
       "file": "providers/plutotv.js",
+      "id": "plutotv",
       "lang": "en",
       "logo": "icons/plutotv.png",
+      "name": "Pluto TV",
       "type": "movie",
       "version": "1.0.0"
     },
     {
-      "id": "netmirror",
-      "name": "NetMirror",
       "file": "providers/netmirror.js",
+      "id": "netmirror",
       "lang": "en",
       "logo": "icons/netmirror.png",
+      "name": "NetMirror",
       "type": "movie",
       "version": "1.0.1"
+    },
+    {
+      "file": "providers/vidfast.js",
+      "id": "vidfast",
+      "lang": "en",
+      "logo": "icons/vidfast.png",
+      "name": "VidFast",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/kisskh.js",
+      "id": "kisskh",
+      "lang": "en",
+      "logo": "icons/kisskh.png",
+      "name": "KissKH",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

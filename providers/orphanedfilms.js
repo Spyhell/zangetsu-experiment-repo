@@ -20,7 +20,7 @@ function getInfo() {
     baseUrl: _HOME,
     logo: _HOME + '/favicon.ico',
     type: 'movie',
-    version: '1.0.1'
+    version: '1.0.2'
   };
 }
 
@@ -264,13 +264,18 @@ function getEpisodes(url, opts) {
   });
 }
 
-function _guessQuality(name) {
-  var n = (name || '').toLowerCase();
-  if (/2160|4k|uhd/.test(n)) return '2160p';
-  if (/1080/.test(n)) return '1080p';
-  if (/720/.test(n)) return '720p';
-  if (/480/.test(n)) return '480p';
-  if (/360/.test(n)) return '360p';
+function _guessQuality(f) {
+  var name = String((f && f.name) || '').toLowerCase();
+  if (/2160|4k|uhd/.test(name)) return '2160p';
+  var m = name.match(/(1080|720|480|360|240)p?\b/);
+  if (m) return m[1] + 'p';
+  // archive.org metadata carries the real video height — use it.
+  var h = parseInt((f && f.height) || '0', 10) || 0;
+  if (h >= 1000) return '1080p';
+  if (h >= 680) return '720p';
+  if (h >= 400) return '480p';
+  if (h >= 300) return '360p';
+  if (h >= 200) return '240p';
   return undefined;
 }
 
@@ -310,18 +315,21 @@ function getVideoSources(episodeUrl) {
       var f = files[i];
       var name = f.name || '';
       if (!_VID_EXT.test(name)) continue;
-      vids.push({ name: name, rank: _fileRank(f), size: parseInt(f.size || '0', 10) || 0 });
+      vids.push({ name: name, file: f, rank: _fileRank(f), size: parseInt(f.size || '0', 10) || 0 });
     }
     if (!vids.length) throw new Error('no video files for ' + identifier);
     vids.sort(function (a, b) {
       if (a.rank !== b.rank) return a.rank - b.rank;
+      var ha = parseInt((a.file && a.file.height) || '0', 10) || 0;
+      var hb = parseInt((b.file && b.file.height) || '0', 10) || 0;
+      if (ha !== hb) return hb - ha; // taller first within a rank group
       return b.size - a.size;
     });
     var jobs = [];
     var n = Math.min(vids.length, 3);
     for (var j = 0; j < n; j++) {
       (function (v) {
-        var q = _guessQuality(v.name);
+        var q = _guessQuality(v.file);
         var dlUrl = _SITE + '/download/' + identifier + '/' +
           encodeURIComponent(v.name).replace(/%2F/g, '/');
         jobs.push(_resolveDirect(dlUrl).then(function (directUrl) {

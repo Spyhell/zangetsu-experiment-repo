@@ -289,15 +289,6 @@
       "name": "Orphaned Films",
       "type": "movie",
       "version": "1.0.2"
-    },
-    {
-      "file": "providers/animeheaven.js",
-      "id": "animeheaven",
-      "lang": "en",
-      "logo": "icons/animeheaven.png",
-      "name": "AnimeHeaven",
-      "type": "anime",
-      "version": "1.0.2"
     }
   ]
 }

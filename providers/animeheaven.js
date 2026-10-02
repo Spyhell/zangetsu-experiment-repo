@@ -16,12 +16,15 @@ var SOURCE_ID = (typeof __SOURCE_ID !== 'undefined' && __SOURCE_ID)
   ? String(__SOURCE_ID) : 'animeheaven';
 
 var SITE = 'https://animeheaven.me';
-var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-  + '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+// Poster images: image.php on the main host 302-redirects to the cx CDN.
+// Hand the app the final CDN URL directly so posters load even if the image
+// loader does not follow redirects (and one round-trip is saved).
+var IMG = 'https://cx.animeheaven.me';
+var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' + '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 function getInfo() {
   return { name: 'AnimeHeaven', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/ah_logo.png', type: 'anime', version: '1.0.1' };
+    logo: SITE + '/ah_logo.png', type: 'anime', version: '1.0.2' };
 }
 
 // ── Timeout guard (copied pattern from animesuge.js) ─────────────────────────
@@ -66,7 +69,7 @@ function _clean(s) {
 }
 
 function _animeItem(code, title, coverHref) {
-  var cover = coverHref ? absUrl(coverHref, SITE) : null;
+  var cover = null; if (coverHref) { var c = String(coverHref); var m = c.match(/image\.php\?([a-z0-9]+)/i); cover = m ? IMG + '/image.php?' + m[1] : absUrl(c, SITE); }
   return { id: 'animeheaven://anime/' + code, title: _clean(title),
     url: 'animeheaven://anime/' + code, type: 'anime', cover: cover };
 }
@@ -151,7 +154,7 @@ function getDetail(url, opts) {
     var title = t ? _clean(t[1]) : r.code;
     return { id: 'animeheaven://anime/' + r.code, title: title,
       url: 'animeheaven://anime/' + r.code, type: 'anime',
-      cover: c ? absUrl(c[1], SITE) : null,
+      cover: (function(){ var cm = c ? String(c[1]).match(/image\.php\?([a-z0-9]+)/i) : null; return cm ? IMG + '/image.php?' + cm[1] : (c ? absUrl(c[1], SITE) : null); })(),
       description: d ? _clean(d[1]) : null, year: year };
   });
 }

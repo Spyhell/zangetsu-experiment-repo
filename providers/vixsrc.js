@@ -347,14 +347,19 @@ function getVideoSources(episodeUrl, opts) {
                 return _isDefaultAudio(b3, audio.name) ? { url: mu2b, body: b3 } : res;
               }, function () { return res; });
             }).then(function (final) {
-              return _expandQualities(final.url, hdrs, tags.subs,
+              // subtitles: [] on purpose. The master playlist already declares
+              // its subtitle renditions and ExoPlayer loads those natively;
+              // the rendition URLs are HLS playlists, not VTT files, so
+              // passing them as subtitles would only hand the player 14
+              // broken subtitle tracks.
+              return _expandQualities(final.url, hdrs, [],
                 audio.name || audio.lang, audio.lang, final.body);
             }));
           })(ordered[i]);
         }
       } else {
         var audioLang = tags.audios.length ? tags.audios[0].lang : null;
-        jobs = [_expandQualities(masterEn, hdrs, tags.subs,
+        jobs = [_expandQualities(masterEn, hdrs, [],
           audioLang === 'en' ? null : audioLang, audioLang, body)];
       }
       return Promise.all(jobs).then(function (sets) {
@@ -376,6 +381,6 @@ function getInfo() {
     baseUrl: _BASE,
     logo: _ICON,
     type: 'movie',
-    version: '1.0.1'
+    version: '1.0.2'
   };
 }

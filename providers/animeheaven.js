@@ -21,7 +21,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 function getInfo() {
   return { name: 'AnimeHeaven', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/ah_logo.png', type: 'anime', version: '1.0.0' };
+    logo: SITE + '/ah_logo.png', type: 'anime', version: '1.0.1' };
 }
 
 // ── Timeout guard (copied pattern from animesuge.js) ─────────────────────────
@@ -95,20 +95,37 @@ function search(query, page, opts) {
 }
 
 // ── home (sub schedule; the site has no dub section) ─────────────────────────
+function _chartItems(html) {
+  var items = [], seen = {}, m;
+  // <div class='chartimg'><a href='anime.php?<code>'><img class='coverimg'
+  //   src='image.php?<code>' alt='Title' ...>
+  var re = /<div class='chartimg'><a href='anime\.php\?([a-z0-9]+)'><img class='coverimg'\s+src='([^']+)' alt='([^']*)'/g;
+  while ((m = re.exec(html)) !== null) {
+    if (seen[m[1]]) continue; seen[m[1]] = 1;
+    items.push(_animeItem(m[1], m[3], m[2]));
+  }
+  return items;
+}
+
 function getHome(opts) {
   var cat = (opts && opts.category) || 'sub';
   if (cat === 'dub') return Promise.resolve([]);
-  return _get(SITE + '/', { 'User-Agent': UA }).then(function (html) {
-    var items = [], seen = {};
-    // <div class='chartimg'><a href='anime.php?<code>'><img class='coverimg'
-    //   src='image.php?<code>' alt='Title' ...>
-    var re = /<div class='chartimg'><a href='anime\.php\?([a-z0-9]+)'><img class='coverimg'\s+src='([^']+)' alt='([^']*)'/g, m;
-    while ((m = re.exec(html)) !== null) {
-      if (seen[m[1]]) continue; seen[m[1]] = 1;
-      items.push(_animeItem(m[1], m[3], m[2]));
-    }
-    if (!items.length) return [];
-    return [{ title: 'Recently Updated (Sub)', items: items }];
+  var hdrs = { 'User-Agent': UA };
+  function row(path, title) {
+    return _get(SITE + path, hdrs).then(function (html) {
+      return { title: title, items: _chartItems(html) };
+    }, function () { return { title: title, items: [] }; });
+  }
+  return Promise.all([
+    row('/', 'Recently Updated (Sub)'),
+    row('/new.php', 'New Series'),
+    row('/popular.php', 'Popular')
+  ]).then(function (rows) {
+    // Drop rows that came back empty, but never return zero rows when the
+    // homepage itself parsed fine.
+    var out = [], i;
+    for (i = 0; i < rows.length; i++) if (rows[i].items.length) out.push(rows[i]);
+    return out.length ? out : rows.slice(0, 1);
   });
 }
 
@@ -195,9 +212,14 @@ function getVideoSources(episodeUrl) {
   var hash = String(episodeUrl || '').split('/ep/')[1] || '';
   if (!/^[0-9a-f]{32}$/.test(hash)) return Promise.reject(new Error('bad episode url'));
   var baseHdrs = { 'User-Agent': UA, 'Referer': SITE + '/' };
-  return _get(SITE + '/gate.php',
-    { 'User-Agent': UA, 'Referer': SITE + '/', 'Cookie': 'key=' + hash }
-  ).then(function (html) {
+  function gateOnce() {
+    return _get(SITE + '/gate.php',
+      { 'User-Agent': UA, 'Referer': SITE + '/', 'Cookie': 'key=' + hash });
+  }
+  // gate.php occasionally hangs (site-side blip); one retry before giving up.
+  return gateOnce().then(function (html) { return html; }, function () {
+    return gateOnce();
+  }).then(function (html) {
     var re = /<source src='(https?:\/\/[^']*video\.mp4[^']*)'/g, m;
     var byHost = {}, order = [];
     while ((m = re.exec(html)) !== null) {

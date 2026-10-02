@@ -231,16 +231,15 @@ function _isDefaultAudio(body, name) {
   }
   return false;
 }
-function _expandQualities(masterUrl, hdrs, subs, tag, audioLang) {
+function _expandQualities(masterUrl, hdrs, subs, tag, audioLang, preBody) {
   var suffix = tag ? ' [' + tag + ']' : '';
   function autoEntry() {
     return { url: masterUrl, quality: 'Auto', label: 'Auto' + suffix,
       container: 'hls', headers: hdrs, audioLang: audioLang || null, subtitles: subs };
   }
   // NOTE: vixsrc playlist URLs carry no .m3u8 extension, so parse by content.
-  var bodyP = _fetchText(masterUrl, 5000, 'master playlist');
-  return bodyP.then(function (body) {
-    if (body.indexOf('#EXT-X-STREAM-INF') === -1) return [autoEntry()];
+  function fromBody(body) {
+    if (!body || body.indexOf('#EXT-X-STREAM-INF') === -1) return [autoEntry()];
     var re = /#EXT-X-STREAM-INF:([^\r\n]*)\r?\n([^\r\n]+)/g, m;
     var vars = [], seen = {}, v, uri, url;
     while ((m = re.exec(body)) !== null) {
@@ -263,6 +262,17 @@ function _expandQualities(masterUrl, hdrs, subs, tag, audioLang) {
         container: 'hls', headers: hdrs, audioLang: audioLang || null, subtitles: subs });
     }
     return out;
+  }
+  if (typeof preBody === 'string' && preBody) {
+    // Master already fetched by the caller (audio-default check) — reuse it
+    // instead of downloading the same playlist a second time.
+    if (preBody.indexOf('#EXTM3U') === -1) return Promise.resolve([autoEntry()]);
+    return Promise.resolve(fromBody(preBody));
+  }
+  var bodyP = _fetchText(masterUrl, 5000, 'master playlist');
+  return bodyP.then(function (body) {
+    if (body.indexOf('#EXTM3U') === -1) return [autoEntry()];
+    return fromBody(body);
   }, function () { return [autoEntry()]; });
 }
 
@@ -304,6 +314,8 @@ function getVideoSources(episodeUrl, opts) {
       var jobs;
       if (tags.audios.length > 1) {
         // Separate entry set per audio language (EN default first).
+        // Each audio's master is fetched ONCE; the body is reused for both
+        // the default-track check and the quality expansion below.
         jobs = [];
         var defAudios = [], otherAudios = [], i, a;
         for (i = 0; i < tags.audios.length; i++) {
@@ -314,21 +326,36 @@ function getVideoSources(episodeUrl, opts) {
         for (i = 0; i < ordered.length; i++) {
           (function (audio) {
             var mu = _masterFor(mp.url, mp, audio.lang);
-            // Prefer the lang param that actually marks this track DEFAULT.
-            jobs.push(_fetchText(mu, 5000, 'master playlist').then(function (b2) {
-              if (_isDefaultAudio(b2, audio.name)) return mu;
-              var mu2 = _masterFor(mp.url, mp, audio.rawLang);
-              return _fetchText(mu2, 5000, 'master playlist').then(function (b3) {
-                return _isDefaultAudio(b3, audio.name) ? mu2 : mu;
-              }, function () { return mu; });
-            }, function () { return mu; }).then(function (finalMaster) {
-              return _expandQualities(finalMaster, hdrs, tags.subs, audio.name || audio.lang, audio.lang);
+            // The 'en' master body is already in hand — reuse it, no re-fetch.
+            var first = (audio.lang === 'en' && body)
+              ? Promise.resolve({ url: mu, body: body })
+              : _fetchText(mu, 5000, 'master playlist').then(function (b2) {
+                  return { url: mu, body: b2 };
+                }, function () { return null; });
+            jobs.push(first.then(function (res) {
+              if (!res) {
+                // Short lang code failed: try the raw code from the playlist.
+                var mu2 = _masterFor(mp.url, mp, audio.rawLang);
+                return _fetchText(mu2, 5000, 'master playlist').then(function (b3) {
+                  return { url: mu2, body: b3 };
+                }, function () { return { url: mu, body: null }; });
+              }
+              // Prefer the lang param that actually marks this track DEFAULT.
+              if (_isDefaultAudio(res.body, audio.name)) return res;
+              var mu2b = _masterFor(mp.url, mp, audio.rawLang);
+              return _fetchText(mu2b, 5000, 'master playlist').then(function (b3) {
+                return _isDefaultAudio(b3, audio.name) ? { url: mu2b, body: b3 } : res;
+              }, function () { return res; });
+            }).then(function (final) {
+              return _expandQualities(final.url, hdrs, tags.subs,
+                audio.name || audio.lang, audio.lang, final.body);
             }));
           })(ordered[i]);
         }
       } else {
         var audioLang = tags.audios.length ? tags.audios[0].lang : null;
-        jobs = [_expandQualities(masterEn, hdrs, tags.subs, audioLang === 'en' ? null : audioLang, audioLang)];
+        jobs = [_expandQualities(masterEn, hdrs, tags.subs,
+          audioLang === 'en' ? null : audioLang, audioLang, body)];
       }
       return Promise.all(jobs).then(function (sets) {
         var out = [], i, j;
@@ -349,6 +376,6 @@ function getInfo() {
     baseUrl: _BASE,
     logo: _ICON,
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }

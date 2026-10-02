@@ -291,15 +291,6 @@
       "version": "1.0.2"
     },
     {
-      "file": "providers/vixsrc.js",
-      "id": "vixsrc",
-      "lang": "en",
-      "logo": "icons/vixsrc.png",
-      "name": "VixSrc",
-      "type": "movie",
-      "version": "1.0.2"
-    },
-    {
       "file": "providers/animeheaven.js",
       "id": "animeheaven",
       "lang": "en",

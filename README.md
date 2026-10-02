@@ -54,7 +54,6 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | KissKH | Anime | 1.0.0 | Asian dramas & movies with EN subtitles, direct MP4 streams. |
 | DesiDub Anime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, HLS streams via VidMoly. |
 | Orphaned Films | Movie | 1.0.2 | Curated public-domain & forgotten films (Film Noir, Silent, Sci-Fi/Horror, VHS Vault), direct archive.org MP4. |
-| VixSrc | Movie | 1.0.2 | Movies & TV series via vixsrc.to (TMDB-keyed), signed HLS 480p/720p/1080p, EN+IT audio + subtitles. |
 | AnimeHeaven | Anime | 1.0.1 | Anime (sub), direct MP4 streams, fast search. |
 
 

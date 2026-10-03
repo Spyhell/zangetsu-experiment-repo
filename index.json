@@ -289,6 +289,4 @@
       "name": "Orphaned Films",
       "type": "movie",
       "version": "1.0.2"
-    }
-  ]
-}
+    },{"file":"providers/toonstream.js","id":"toonstream","lang":"en","logo":"icons/toonstream.png","name":"ToonStream","type":"anime","version":"1.0.0"},{"file":"providers/anikoto.js","id":"anikoto","lang":"en","logo":"icons/anikoto.png","name":"AniKoto","type":"anime","version":"1.0.0"}]}

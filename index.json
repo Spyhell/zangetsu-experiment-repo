@@ -256,12 +256,7 @@
     },
     {
       "file": "providers/vidfast.js",
-      "id": "vidfast",
-      "lang": "en",
-      "logo": "icons/vidfast.png",
-      "name": "VidFast",
-      "type": "movie",
-      "version": "1.0.0"
+      "id": "vidfast", "lang": "en", "logo": "icons/vidfast.png", "name": "VidFast", "type": "movie", "version": "1.0.1"
     },
     {
       "file": "providers/kisskh.js",
@@ -289,4 +284,4 @@
       "name": "Orphaned Films",
       "type": "movie",
       "version": "1.0.2"
-    },{"file":"providers/toonstream.js","id":"toonstream","lang":"en","logo":"icons/toonstream.png","name":"ToonStream","type":"anime","version":"1.0.0"},{"file":"providers/anikoto.js","id":"anikoto","lang":"en","logo":"icons/anikoto.png","name":"AniKoto","type":"anime","version":"1.0.0"}]}
+    },{"file":"providers/toonstream.js","id":"toonstream","lang":"en","logo":"icons/toonstream.png","name":"ToonStream","type":"anime","version":"1.0.0"},{"file":"providers/anikoto.js","id":"anikoto","lang":"en","logo":"icons/anikoto.png","name":"AniKoto","type":"anime","version":"1.0.0"},{"file":"providers/animegg.js","id":"animegg","lang":"en","logo":"icons/animegg.png","name":"AnimeGG","type":"anime","version":"1.0.0"}]}

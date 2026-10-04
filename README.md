@@ -53,7 +53,10 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | VidFast | Movie | 1.0.1 | Movies & TV series via multi-server HLS resolver (TMDB-keyed), subtitles. |
 | KissKH | Anime | 1.0.0 | Asian dramas & movies with EN subtitles, direct MP4 streams. |
 | DesiDub Anime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, HLS streams via VidMoly. |
-| Orphaned Films | Movie | 1.0.2 | Curated public-domain & forgotten films (Film Noir, Silent, Sci-Fi/Horror, VHS Vault), direct archive.org MP4. | $$$ | ToonStream | Anime | 1.0.0 | Anime, movies & cartoons (incl. Hindi/Tamil/Telugu dubs), HLS via VidMoly. | $$$ | AniKoto | Anime | 1.0.0 | Anime streaming with sub & dub, HLS + subtitles. | $$$ | AnimeGG | Anime | 1.0.0 | Anime with sub & dub as separate streams, direct MP4 up to 1080p. |
+| Orphaned Films | Movie | 1.0.2 | Curated public-domain & forgotten films (Film Noir, Silent, Sci-Fi/Horror, VHS Vault), direct archive.org MP4. |
+| ToonStream | Anime | 1.0.0 | Anime, movies & cartoons (incl. Hindi/Tamil/Telugu dubs), HLS via VidMoly. |
+| AniKoto | Anime | 1.0.0 | Anime streaming with sub & dub, HLS + subtitles. |
+| AnimeGG | Anime | 1.0.0 | Anime with sub & dub as separate streams, direct MP4 up to 1080p. |
 
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

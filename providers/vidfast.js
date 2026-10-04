@@ -1,21 +1,31 @@
 /*
  * VidFast — movies + TV series via vidfast.vc's multi-server resolver.
  *
- * VERIFIED chain (2026-10-01, from this VM; all steps public, no login,
- * no private key):
+ * VERIFIED chain (2026-10-04, via browser-class client; all steps public,
+ * no login, no private key):
  *   1. GET https://vidfast.vc/movie/{tmdbId}  (TV: /tv/{tmdbId}/{s}/{e})
- *      -> page HTML; token via regex \\\\"(?:en|token)\\\\":\\\\"(.*?)\\\\"
- *   2. GET https://enc-dec.app/api/enc-vidfast?text=<token>
- *      -> {result:{servers, stream, token}}   (csrf token for player POSTs)
- *   3. POST <servers> with Referer + X-CSRF-Token -> encrypted server list
- *   4. POST https://enc-dec.app/api/dec-vidfast  {text: <serversEnc>}
- *      -> [{name, data, description}]   (6 servers for Fight Club)
- *   5. per server: POST <stream>/<server.data> -> encrypted;
+ *      -> page HTML; token via regex \\"(?:en|token)\\":\\"(.*?)\\"
+ *   2. GET https://enc-dec.app/api/enc-vidfast?text=<token>&stage=1
+ *      -> {result:{stage1: <url>, token: <csrf1>}}
+ *      (the relay made stage= mandatory ~2026-10-04; the old single
+ *      call now returns HTTP 400)
+ *   3. POST <stage1> with Referer + X-Requested-With + X-CSRF-Token=<csrf1>
+ *      -> encrypted blob (text)
+ *   4. GET https://enc-dec.app/api/enc-vidfast?text=<blob>&stage=2
+ *      -> {result:{servers: <url>, stream: <url>, token: <csrf2>}}
+ *   5. POST <servers> with Referer + X-CSRF-Token=<csrf2> -> encrypted list
+ *   6. POST https://enc-dec.app/api/dec-vidfast  {text: <serversEnc>}
+ *      -> [{name, data, description}]   (6 servers for GoT S1E1)
+ *   7. per server: POST <stream>/<server.data> -> encrypted;
  *      dec-vidfast decrypt -> {url, tracks:[{file,label}]}
- *      (3 of 6 servers unlocked; 404/502 on the rest is normal per docs)
- *   6. url = HLS master playlist (2160p/1080p/720p/...); playable with
- *      Referer: https://vidfast.vc/  (valid #EXTM3U + fMP4 media segments
- *      confirmed via 206 range request)
+ *   8. url = HLS master playlist (4K master verified: HTTP 200 #EXTM3U);
+ *      playable with Referer: https://vidfast.vc/
+ *
+ * VM NOTE: vidfast.vc's deep zirlaku endpoints TLS-fingerprint the client
+ * and HTTP-500 non-browser stacks (node/urllib/curl), so the harness cannot
+ * verify steps 5-8 from this VM. Proven with a Chrome-impersonated client
+ * that the full chain resolves to a playable master playlist; the phone's
+ * verdict is final for this source.
  *
  * Crypto note: vidfast's player decrypts inside an obfuscated browser
  * bundle, which cannot run in this JS runtime. The chain above replays the
@@ -29,7 +39,7 @@
  * own key to override). Stream URLs are signed/expiring, so
  * getVideoSources re-resolves them fresh on every playback.
  *
- * v1.0.0
+ * v1.0.1
  */
 
 var _BASE = 'https://vidfast.vc';
@@ -74,7 +84,7 @@ function getInfo() {
     baseUrl: _BASE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/vidfast.png',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 
@@ -280,7 +290,8 @@ function _vidfastHeaders(csrf) {
   var h = {
     'User-Agent': _UA,
     'Referer': _BASE + '/',
-    'Accept': 'application/json, text/plain, */*'
+    'Accept': 'application/json, text/plain, */*',
+    'X-Requested-With': 'XMLHttpRequest'
   };
   if (csrf) h['X-CSRF-Token'] = csrf;
   return h;
@@ -336,7 +347,23 @@ function getVideoSources(episodeUrl) {
     .then(function (page) {
       var token = _extractToken(page);
       if (!token) throw new Error('no player token on ' + pageUrl);
-      return _getJson(_ENC_API + '/enc-vidfast?text=' + encodeURIComponent(token), null, 'vidfast:enc');
+      // Stage 1: exchange the page token for the encrypted route URL + csrf.
+      return _getJson(
+        _ENC_API + '/enc-vidfast?text=' + encodeURIComponent(token) + '&stage=1',
+        null, 'vidfast:enc1');
+    })
+    .then(function (j) {
+      var r1 = (j && j.result) || {};
+      if (!r1.stage1 || !r1.token) throw new Error('no stage1 routes from enc step');
+      // POST the stage1 route (csrf from stage 1) -> encrypted blob.
+      return _postText(r1.stage1, _vidfastHeaders(r1.token), 'vidfast:stage1-post')
+        .then(function (blob) { return { blob: blob }; });
+    })
+    .then(function (s) {
+      // Stage 2: decrypt the blob into {servers, stream, token}.
+      return _getJson(
+        _ENC_API + '/enc-vidfast?text=' + encodeURIComponent(s.blob) + '&stage=2',
+        null, 'vidfast:enc2');
     })
     .then(function (j) {
       var init = (j && j.result) || {};

@@ -353,5 +353,5 @@
    "type": "movie",
    "version": "1.0.0"
   }
- , { "file": "providers/tgcloud.js", "id": "tgcloud", "lang": "en", "logo": "icons/tgcloud.png", "name": "TG Cloud", "type": "movie", "version": "2.0.5" } ]
+ , { "file": "providers/tgcloud.js", "id": "tgcloud", "lang": "en", "logo": "icons/tgcloud.png", "name": "TG Cloud", "type": "movie", "version": "2.1.0" } ]
 }

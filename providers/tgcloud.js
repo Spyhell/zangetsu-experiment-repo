@@ -4,7 +4,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://t.me',
     type: 'movie',
-    version: '1.0.1'
+    version: '1.0.2'
   };
 }
 
@@ -13,7 +13,13 @@ function getSettings() {
   return [
     {
       key: 'serverUrl',
-      label: 'Server URL (your Telegram bot server, e.g. https://my-bot.onrender.com)',
+      label: 'Server URL (your bot server, e.g. https://my-bot.onrender.com)',
+      type: 'text',
+      default: ''
+    },
+    {
+      key: 'apiKey',
+      label: 'API Key (optional — only if your server needs one)',
       type: 'text',
       default: ''
     }
@@ -37,10 +43,14 @@ function _serverUrl() {
 }
 
 function _get(url) {
+  var headers = { 'User-Agent': 'Zangetsu/1.0', 'Accept': 'application/json' };
+  var apiKey = _cfg('apiKey', '');
+  if (apiKey) headers['X-API-Key'] = apiKey;
   return fetch(url, {
     method: 'GET',
-    headers: { 'User-Agent': 'Zangetsu/1.0', 'Accept': 'application/json' }
+    headers: headers
   }).then(function (r) {
+    if (r.status === 401 || r.status === 403) throw new Error('TG Cloud: wrong API key for this server.');
     if (!r.ok) throw new Error('server returned HTTP ' + r.status);
     return r.json();
   });

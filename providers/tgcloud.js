@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.0.0'
+    version: '2.0.1'
   };
 }
 
@@ -146,10 +146,23 @@ function _streamUrl(resolved, token) {
          '/api/download/' + p64 + '/' + encodeURIComponent(_safeName(payload.file_name));
 }
 
+function _cleanTitle(t) {
+  var s = String(t || 'Unknown');
+  // strip extension
+  s = s.replace(/\.(mp4|mkv|avi|mov|webm)$/i, '');
+  // dots/underscores -> spaces
+  s = s.replace(/[._]+/g, ' ');
+  // remove common release tags for display
+  s = s.replace(/\b(1080p|720p|480p|2160p|4k|webrip|web-dl|webdl|bluray|hdtv|malaysub|malay sub|hardsub|x264|x265|hevc|aac|mp3)\b/gi, '');
+  s = s.replace(/\s{2,}/g, ' ').trim();
+  return s || String(t);
+}
+
 function _toItem(f) {
-  var title = f.title || f.name || 'Unknown';
+  var rawTitle = f.title || f.name || 'Unknown';
+  var title = _cleanTitle(rawTitle);
   var code = f.short_code || f.shortCode || f.code || '';
-  var isSeries = /S\d{1,2}E\d{1,2}/i.test(title) || /\bepisode\s*\d+/i.test(title);
+  var isSeries = /S\d{1,2}E\d{1,2}/i.test(rawTitle) || /\bepisode\s*\d+/i.test(rawTitle);
   return {
     id: String(code),
     title: title,
@@ -174,10 +187,11 @@ function _wp(action, params) {
 function getHome(opts) {
   var base = _serverUrl();
   if (!base || !_password()) return [{ title: 'Setup required', items: [] }];
-  return _wp('stream_trending', { limit: 20 }).then(function (items) {
-    return [{ title: 'Trending', items: items.map(_toItem) }];
+  // Latest indexed files (trending endpoint returns keywords, not files)
+  return _wp('stream_search_files', { search: '', limit: 20 }).then(function (items) {
+    return [{ title: 'Latest Files', items: items.map(_toItem) }];
   }).catch(function () {
-    return [{ title: 'Trending', items: [] }];
+    return [{ title: 'Latest Files', items: [] }];
   });
 }
 

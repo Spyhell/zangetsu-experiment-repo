@@ -334,6 +334,24 @@
    "name": "Classic TV Vault",
    "type": "movie",
    "version": "1.0.0"
+  },
+  {
+   "file": "providers/sportslivetv.js",
+   "id": "sportslivetv",
+   "lang": "en",
+   "logo": "icons/sportslivetv.png",
+   "name": "Sports Live TV",
+   "type": "movie",
+   "version": "1.0.0"
+  },
+  {
+   "file": "providers/movieslivetv.js",
+   "id": "movieslivetv",
+   "lang": "en",
+   "logo": "icons/movieslivetv.png",
+   "name": "Movies Live TV",
+   "type": "movie",
+   "version": "1.0.0"
   }
  ]
 }

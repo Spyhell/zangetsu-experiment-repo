@@ -59,6 +59,8 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | AnimeGG | Anime | 1.0.0 | Anime with sub & dub as separate streams, direct MP4 up to 1080p. |
 | Classic Cartoons | Anime | 1.0.0 | Public-domain classic cartoon shorts (Popeye, Betty Boop), direct MP4 from archive.org. |
 | Classic TV Vault | Movie | 1.0.0 | Public-domain vintage TV serials (Dragnet, Lone Ranger, Sherlock Holmes), direct MP4 from archive.org. |
+| Sports Live TV | Movie | 1.0.0 | ~450 live sports channels worldwide (football, ESPN/beIN, outdoor sports), direct HLS. |
+| Movies Live TV | Movie | 1.0.0 | ~790 live 24/7 movie channels (action, comedy, classic, family, series), direct HLS. |
 
 
 New sources are added regularly. After a source updates, tap **Update** on it in the app's Sources screen.

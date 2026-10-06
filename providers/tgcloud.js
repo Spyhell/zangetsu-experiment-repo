@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.0.2'
+    version: '2.0.3'
   };
 }
 
@@ -222,16 +222,21 @@ function _withPosters(items) {
   }));
 }
 
+function _isSeriesTitle(t) {
+  var s = String(t || '');
+  return /S\d{1,2}E\d{1,2}/i.test(s) || /\bEP?\d{1,4}\b/i.test(s) ||
+         /\bepisode\s*\d+/i.test(s) || /\bseason\s*\d+/i.test(s);
+}
+
 function _toItem(f) {
   var rawTitle = f.title || f.name || 'Unknown';
   var title = _cleanTitle(rawTitle);
   var code = f.short_code || f.shortCode || f.code || '';
-  var isSeries = /S\d{1,2}E\d{1,2}/i.test(rawTitle) || /\bepisode\s*\d+/i.test(rawTitle);
   return {
     id: String(code),
     title: title,
     url: 'tgcloud://file/' + encodeURIComponent(code),
-    type: isSeries ? 'anime' : 'movie',
+    type: _isSeriesTitle(rawTitle) ? 'anime' : 'movie',
     cover: f.thumbnail_url || f.poster || f.thumbnail || undefined
   };
 }
@@ -259,7 +264,7 @@ function getHome(opts) {
   });
   var movies = _wp('stream_search_files', { search: '2025', limit: 14 }).then(function (items) {
     var mapped = items.filter(function (f) {
-      return !/S\d{1,2}E\d{1,2}/i.test(f.title || '');
+      return !_isSeriesTitle(f.title || '');
     }).map(_toItem);
     return _withPosters(mapped).then(function (done) {
       return { title: 'New Movies', items: done };
@@ -289,7 +294,7 @@ function getDetail(url, opts) {
   return _srv('/api/resolve-shortcode?short_code=' + encodeURIComponent(code))
     .then(function (r) {
       var title = r.title || r.file_name || ('File ' + code);
-      var isSeries = /S\d{1,2}E\d{1,2}/i.test(title) || /\bepisode\s*\d+/i.test(title);
+      var isSeries = _isSeriesTitle(title) || _isSeriesTitle(r.file_name || '');
       return {
         id: code,
         title: title,

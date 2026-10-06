@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.0.3'
+    version: '2.0.4'
   };
 }
 
@@ -115,15 +115,34 @@ function _srv(path) {
 
 /* Build the /api/download stream URL the way the server expects:
  * base64url(json({short_code,bot_id,file_id,file_size,file_name,mime})) */
+/* Pure-JS base64url encode (no btoa/Buffer — app runtime has neither). */
 function _b64url(obj) {
   var json = JSON.stringify(obj);
-  var b64;
-  if (typeof Buffer !== 'undefined') {
-    b64 = Buffer.from(json, 'utf8').toString('base64');
-  } else {
-    b64 = btoa(unescape(encodeURIComponent(json)));
+  // UTF-8 encode
+  var bytes = [];
+  for (var i = 0; i < json.length; i++) {
+    var c = json.charCodeAt(i);
+    if (c < 128) { bytes.push(c); }
+    else if (c < 2048) { bytes.push(192 | (c >> 6), 128 | (c & 63)); }
+    else if (c < 55296 || c >= 57344) { bytes.push(224 | (c >> 12), 128 | ((c >> 6) & 63), 128 | (c & 63)); }
+    else {
+      i++;
+      var c2 = json.charCodeAt(i);
+      var cp = 65536 + (((c & 1023) << 10) | (c2 & 1023));
+      bytes.push(240 | (cp >> 18), 128 | ((cp >> 12) & 63), 128 | ((cp >> 6) & 63), 128 | (cp & 63));
+    }
   }
-  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  var out = '';
+  for (var j = 0; j < bytes.length; j += 3) {
+    var b0 = bytes[j], b1 = j + 1 < bytes.length ? bytes[j + 1] : 0, b2 = j + 2 < bytes.length ? bytes[j + 2] : 0;
+    var n = (b0 << 16) | (b1 << 8) | b2;
+    out += chars[(n >> 18) & 63] + chars[(n >> 12) & 63] + chars[(n >> 6) & 63] + chars[n & 63];
+  }
+  // base64url: no padding, -_ instead of +/
+  var pad = (3 - (bytes.length % 3)) % 3;
+  out = out.substring(0, out.length - pad);
+  return out.replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 function _safeName(name) {

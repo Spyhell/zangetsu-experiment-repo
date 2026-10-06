@@ -4,8 +4,20 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://t.me',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
+}
+
+/* ---- Settings ---- */
+function getSettings() {
+  return [
+    {
+      key: 'serverUrl',
+      label: 'Server URL (your Telegram bot server, e.g. https://my-bot.onrender.com)',
+      type: 'text',
+      default: ''
+    }
+  ];
 }
 
 function _cfg(key, def) {

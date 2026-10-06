@@ -61,7 +61,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | Classic TV Vault | Movie | 1.0.0 | Public-domain vintage TV serials (Dragnet, Lone Ranger, Sherlock Holmes), direct MP4 from archive.org. |
 | Sports Live TV | Movie | 1.0.0 | ~450 live sports channels worldwide (football, ESPN/beIN, outdoor sports), direct HLS. |
 | Movies Live TV | Movie | 1.0.0 | ~790 live 24/7 movie channels (action, comedy, classic, family, series), direct HLS. |
-| TG Cloud | Movie | 1.0.1 | Telegram cloud file streaming via your own bot server (set Server URL in settings). |
+| TG Cloud | Movie | 1.0.2 | Telegram cloud file streaming via your own bot server (set Server URL in settings). |
 
 
 

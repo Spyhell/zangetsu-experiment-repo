@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.0.4'
+    version: '2.0.5'
   };
 }
 
@@ -152,11 +152,11 @@ function _safeName(name) {
 }
 
 function _streamUrl(resolved, token) {
+  // Match Stremio's exact payload format (server-tested)
   var payload = {
     short_code: resolved.short_code || resolved.shortCode || '',
-    bot_id: resolved.bot_id || resolved.botId || '',
-    file_id: resolved.file_id_mt || resolved.file_id || '',
-    file_size: resolved.file_size || resolved.fileSize || 0,
+    bot_id: String(resolved.bot_id || resolved.botId || ''),
+    file_size: parseInt(resolved.file_size || resolved.fileSize || 0, 10),
     file_name: resolved.title || resolved.file_name || 'video.mp4',
     mime: resolved.mime || 'video/mp4'
   };

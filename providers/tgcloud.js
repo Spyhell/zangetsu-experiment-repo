@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.0.5'
+    version: '2.1.0'
   };
 }
 
@@ -335,23 +335,95 @@ function getEpisodes(url, opts) {
   return getDetail(url, opts).then(function (d) { return d.episodes || []; });
 }
 
+function _qualityFromLabel(label) {
+  var m = /(\d{3,4})p/i.exec(label || '');
+  if (m) return m[1] + 'p';
+  if (/2160|4k/i.test(label)) return '2160p';
+  if (/1080/i.test(label)) return '1080p';
+  if (/480/i.test(label)) return '480p';
+  return '720p';
+}
+
+function _sourceName(title) {
+  // Extract core movie/series name for multi-source search
+  var s = String(title || '');
+  s = s.replace(/\.(mp4|mkv|avi|mov|webm)$/i, '');
+  s = s.replace(/[._]+/g, ' ');
+  var yearM = /\b(19\d{2}|20\d{2})\b/.exec(s);
+  var name = yearM ? s.substring(0, yearM.index) : s.split(/\bS\d{1,2}E\d{1,2}\b/i)[0];
+  name = name.replace(/\b(1080p|720p|480p|2160p|4k|webrip|web-dl|webdl|bluray|hdtv|hdrip|hdcam|malaysub|malay sub|hardsub|x264|x265|hevc|aac|mp3|hindi|tamil|telugu|dubbed|subbed|links2u|csmelayu|moviehuntermy)\b/gi, '');
+  return name.replace(/\s{2,}/g, ' ').trim();
+}
+
 function getVideoSources(episodeUrl) {
   var code = decodeURIComponent(String(episodeUrl).replace('tgcloud://play/', ''));
   var tok;
+  var firstResolved;
   return _login().then(function (t) {
     tok = t;
     return _srv('/api/resolve-shortcode?short_code=' + encodeURIComponent(code));
   }).then(function (r) {
     if (!r || r.ok === 0) throw new Error('TG Cloud: could not resolve this file on your server.');
     r.short_code = code;
-    var url = _streamUrl(r, tok);
-    var label = r.title || r.file_name || 'TG Cloud';
-    var quality = '720p';
-    var m = /(\d{3,4})p/i.exec(label);
-    if (m) quality = m[1] + 'p';
-    else if (/2160|4k/i.test(label)) quality = '2160p';
-    else if (/1080/i.test(label)) quality = '1080p';
-    else if (/480/i.test(label)) quality = '480p';
-    return [{ url: url, quality: quality, label: label, container: 'mp4' }];
+    firstResolved = r;
+    // Find all uploads of the same title (like Nuvio's multiple sources)
+    var name = _sourceName(r.title || r.file_name || '');
+    if (!name || name.length < 3) return [r];
+    return _wp('stream_search_files', { search: name, limit: 15 }).then(function (files) {
+      // keep files that look like the same movie/series
+      var nameLower = name.toLowerCase();
+      var matches = files.filter(function (f) {
+        var ft = String(f.title || '').toLowerCase().replace(/[._]+/g, ' ');
+        return ft.indexOf(nameLower.split(' ')[0]) !== -1 && f.short_code;
+      });
+      // always include the original first
+      var seen = {};
+      seen[code] = true;
+      var all = [r];
+      for (var i = 0; i < matches.length && all.length < 6; i++) {
+        if (!seen[matches[i].short_code]) {
+          seen[matches[i].short_code] = true;
+          all.push({ short_code: matches[i].short_code, title: matches[i].title,
+                     file_name: matches[i].title, _fromSearch: true });
+        }
+      }
+      return all;
+    }).catch(function () { return [r]; });
+  }).then(function (allResolved) {
+    // Resolve each (search results need full resolve) and build URLs in parallel
+    var jobs = allResolved.map(function (item) {
+      if (!item._fromSearch) {
+        // already resolved
+        var url = _streamUrl(item, tok);
+        var label = item.title || item.file_name || 'TG Cloud';
+        return Promise.resolve({ url: url, quality: _qualityFromLabel(label),
+          label: _qualityFromLabel(label) + ' | ' + _cleanTitle(label), container: 'mp4' });
+      }
+      return _srv('/api/resolve-shortcode?short_code=' + encodeURIComponent(item.short_code))
+        .then(function (rr) {
+          if (!rr || rr.ok === 0) return null;
+          rr.short_code = item.short_code;
+          var url = _streamUrl(rr, tok);
+          var rawLabel = rr.title || rr.file_name || item.title || 'TG Cloud';
+          var q = _qualityFromLabel(rawLabel);
+          // distinctive label: quality + file size + short name
+          var sizeStr = '';
+          var sz = parseInt(rr.file_size || 0, 10);
+          if (sz > 1073741824) sizeStr = (sz / 1073741824).toFixed(1) + 'GB';
+          else if (sz > 1048576) sizeStr = Math.round(sz / 1048576) + 'MB';
+          var disp = q + (sizeStr ? ' | ' + sizeStr : '') + ' | ' + _cleanTitle(rawLabel).substring(0, 40);
+          return { url: url, quality: q, label: disp, container: 'mp4' };
+        }).catch(function () { return null; });
+    });
+    return Promise.all(jobs).then(function (sources) {
+      var valid = sources.filter(function (s) { return !!s; });
+      if (!valid.length) throw new Error('TG Cloud: no playable sources found.');
+      // sort by quality (highest first)
+      var qOrder = { '2160p': 5, '1080p': 4, '720p': 3, '480p': 2 };
+      valid.sort(function (a, b) {
+        return (qOrder[b.quality] || 0) - (qOrder[a.quality] || 0);
+      });
+      return valid;
+    });
   });
 }

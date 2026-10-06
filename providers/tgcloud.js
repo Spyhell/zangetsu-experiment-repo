@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.1.0'
+    version: '2.1.1'
   };
 }
 
@@ -380,7 +380,7 @@ function getVideoSources(episodeUrl) {
       var seen = {};
       seen[code] = true;
       var all = [r];
-      for (var i = 0; i < matches.length && all.length < 6; i++) {
+      for (var i = 0; i < matches.length && all.length < 12; i++) {
         if (!seen[matches[i].short_code]) {
           seen[matches[i].short_code] = true;
           all.push({ short_code: matches[i].short_code, title: matches[i].title,

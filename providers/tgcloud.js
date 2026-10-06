@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.0.1'
+    version: '2.0.2'
   };
 }
 
@@ -150,12 +150,76 @@ function _cleanTitle(t) {
   var s = String(t || 'Unknown');
   // strip extension
   s = s.replace(/\.(mp4|mkv|avi|mov|webm)$/i, '');
-  // dots/underscores -> spaces
+  // dots/underscores -> spaces (keep apostrophes)
   s = s.replace(/[._]+/g, ' ');
-  // remove common release tags for display
-  s = s.replace(/\b(1080p|720p|480p|2160p|4k|webrip|web-dl|webdl|bluray|hdtv|malaysub|malay sub|hardsub|x264|x265|hevc|aac|mp3)\b/gi, '');
-  s = s.replace(/\s{2,}/g, ' ').trim();
-  return s || String(t);
+  var yearM = /\b(19\d{2}|20\d{2})\b/.exec(s);
+  var year = yearM ? yearM[1] : '';
+  var name;
+  if (year) {
+    // take everything before the year as the title
+    name = s.substring(0, yearM.index);
+  } else {
+    // no year: cut at season/episode markers or release tags
+    name = s.split(/\bS\d{1,2}E\d{1,2}\b/i)[0];
+  }
+  // remove release tags
+  name = name.replace(/\b(1080p|720p|480p|2160p|4k|webrip|web-dl|webdl|bluray|hdtv|hdrip|hdcam|malaysub|malay sub|hardsub|x264|x265|hevc|aac|mp3|hindi|tamil|telugu|dubbed|subbed|links2u|csmelayu|moviehuntermy)\b/gi, '');
+  name = name.replace(/\s{2,}/g, ' ').trim();
+  // reattach episode marker for series
+  var epM = /\b(S\d{1,2}E\d{1,2})\b/i.exec(s);
+  var out = name;
+  if (year && !/\(\d{4}\)/.test(out)) out += ' ' + year;
+  if (epM) out += ' ' + epM[1].toUpperCase();
+  out = out.replace(/\s{2,}/g, ' ').trim();
+  return out || String(t);
+}
+
+/* ---- TMDB posters (same public key as CineStream) ---- */
+var _TMDB_KEY = '1865f43a0549ca50d341dd9ab8b29f49';
+var _TMDB_BASE = 'https://api.themoviedb.org/3';
+var _posterCache = {};
+
+function _tmdbPoster(title, isSeries) {
+  var cacheKey = (isSeries ? 'tv:' : 'movie:') + title.toLowerCase();
+  if (_posterCache[cacheKey] !== undefined) return Promise.resolve(_posterCache[cacheKey]);
+  var type = isSeries ? 'tv' : 'movie';
+  var yearM = /(\d{4})/.exec(title);
+  var year = yearM ? yearM[1] : '';
+  // query = title without year and without episode marker
+  var query = title.replace(/\b(19\d{2}|20\d{2})\b/g, '').replace(/\bS\d{1,2}E\d{1,2}\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+  function doSearch(withYear) {
+    var url = _TMDB_BASE + '/search/' + type + '?api_key=' + _TMDB_KEY +
+              '&query=' + encodeURIComponent(query);
+    if (withYear && year) url += (isSeries ? '&first_air_date_year=' : '&year=') + year;
+    return _fetchJson(url).then(function (d) {
+      return (d && d.results && d.results[0]) || null;
+    });
+  }
+  return doSearch(true).then(function (r) {
+    if (!r && year) return doSearch(false);  // retry without year filter
+    return r;
+  }).then(function (r) {
+    var poster = r && r.poster_path ? 'https://image.tmdb.org/t/p/w500' + r.poster_path : null;
+    _posterCache[cacheKey] = poster;
+    return poster;
+  }).catch(function () {
+    _posterCache[cacheKey] = null;
+    return null;
+  });
+}
+
+/* Enhance items with TMDB posters (parallel, best-effort). */
+function _withPosters(items) {
+  return Promise.all(items.map(function (it) {
+    // skip if already has a real (non-placeholder) thumbnail
+    if (it.cover && it.cover.indexOf('tg-placeholder') === -1) return Promise.resolve(it);
+    var isSeries = it.type === 'anime';
+    return _tmdbPoster(it.title, isSeries).then(function (poster) {
+      if (poster) it.cover = poster;
+      else if (it.cover && it.cover.indexOf('tg-placeholder') !== -1) it.cover = undefined;
+      return it;
+    });
+  }));
 }
 
 function _toItem(f) {
@@ -187,10 +251,27 @@ function _wp(action, params) {
 function getHome(opts) {
   var base = _serverUrl();
   if (!base || !_password()) return [{ title: 'Setup required', items: [] }];
-  // Latest indexed files (trending endpoint returns keywords, not files)
-  return _wp('stream_search_files', { search: '', limit: 20 }).then(function (items) {
-    return [{ title: 'Latest Files', items: items.map(_toItem) }];
-  }).catch(function () {
+  var latest = _wp('stream_search_files', { search: '', limit: 14 }).then(function (items) {
+    var mapped = items.map(_toItem);
+    return _withPosters(mapped).then(function (done) {
+      return { title: 'Latest Files', items: done };
+    });
+  });
+  var movies = _wp('stream_search_files', { search: '2025', limit: 14 }).then(function (items) {
+    var mapped = items.filter(function (f) {
+      return !/S\d{1,2}E\d{1,2}/i.test(f.title || '');
+    }).map(_toItem);
+    return _withPosters(mapped).then(function (done) {
+      return { title: 'New Movies', items: done };
+    });
+  });
+  var series = _wp('stream_search_files', { search: 'S01E01', limit: 14 }).then(function (items) {
+    var mapped = items.map(_toItem);
+    return _withPosters(mapped).then(function (done) {
+      return { title: 'New Series', items: done };
+    });
+  });
+  return Promise.all([latest, movies, series]).catch(function () {
     return [{ title: 'Latest Files', items: [] }];
   });
 }
@@ -199,7 +280,7 @@ function search(query, page, opts) {
   var base = _serverUrl();
   if (!base) throw new Error('TG Cloud: add your Server URL in settings first.');
   return _wp('stream_search_files', { search: query, limit: 25 }).then(function (items) {
-    return items.map(_toItem);
+    return _withPosters(items.map(_toItem));
   });
 }
 

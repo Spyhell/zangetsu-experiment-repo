@@ -79,3 +79,5 @@ New sources are added regularly. After a source updates, tap **Update** on it in
 
 MIT.
 
+| News Live TV | Movie | 1.0.0 | ~1,000 live news channels worldwide (BBC, CNN, Sky, Al Jazeera, NDTV), direct HLS. |
+| Documentary Live TV | Movie | 1.0.0 | ~250 live documentary channels (nature, science, docuseries, culture), direct HLS. |

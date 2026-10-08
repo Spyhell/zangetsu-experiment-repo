@@ -15,7 +15,7 @@ function getInfo() {
     lang: 'en',
     baseUrl: 'https://pencarimovie.com',
     type: 'movie',
-    version: '2.1.1'
+    version: '2.1.2'
   };
 }
 
@@ -423,6 +423,10 @@ function getVideoSources(episodeUrl) {
       valid.sort(function (a, b) {
         return (qOrder[b.quality] || 0) - (qOrder[a.quality] || 0);
       });
+      // BAND-AID v2.1.2: Zangetsu's player currently plays only the LAST entry,
+      // so list best last until the app's picker/player is fixed, then revert
+      // this line (re-publish as v2.1.3 with plain best-first order).
+      valid.reverse();
       return valid;
     });
   });

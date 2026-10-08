@@ -379,6 +379,24 @@
       "name": "Documentary Live TV",
       "type": "movie",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/yts.js",
+      "id": "yts",
+      "lang": "en",
+      "logo": "icons/yts.png",
+      "name": "YTS",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/archiveanime.js",
+      "id": "archiveanime",
+      "lang": "en",
+      "logo": "icons/archiveanime.png",
+      "name": "Archive Anime",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

@@ -397,6 +397,24 @@
       "name": "Archive Anime",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/vidzee.js",
+      "id": "vidzee",
+      "lang": "en",
+      "logo": "icons/vidzee.png",
+      "name": "VidZee",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/entertainmentlivetv.js",
+      "id": "entertainmentlivetv",
+      "lang": "en",
+      "logo": "icons/entertainmentlivetv.png",
+      "name": "Entertainment Live TV",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

@@ -85,3 +85,5 @@ MIT.
 | Archive Anime | Anime | 1.0.0 | ~37k anime from the Internet Archive collection, direct mp4, per-episode files. |
 | VidZee | Movie | 1.0.0 | Movies & TV shows via VidZee's direct stream API (multi-server, no login), direct HLS. |
 | Entertainment Live TV | Movie | 1.0.0 | ~900 live entertainment channels worldwide (Zee, Colors, Sony, reality, variety), direct HLS. |
+| SubsPlease | Anime | 1.0.0 | Current-season English-subbed anime, torrent magnets in 480p/720p/1080p, played by the app's torrent engine. |
+| Series Live TV | Movie | 1.0.0 | ~500 live 24/7 TV-series channels worldwide (drama, comedy, classic), direct HLS. |

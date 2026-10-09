@@ -83,3 +83,5 @@ MIT.
 | Documentary Live TV | Movie | 1.0.0 | ~250 live documentary channels (nature, science, docuseries, culture), direct HLS. |
 | YTS | Movie | 1.0.0 | Curated movie torrents (magnet links, quality/size/seeds), played by the app's torrent engine. |
 | Archive Anime | Anime | 1.0.0 | ~37k anime from the Internet Archive collection, direct mp4, per-episode files. |
+| VidZee | Movie | 1.0.0 | Movies & TV shows via VidZee's direct stream API (multi-server, no login), direct HLS. |
+| Entertainment Live TV | Movie | 1.0.0 | ~900 live entertainment channels worldwide (Zee, Colors, Sony, reality, variety), direct HLS. |

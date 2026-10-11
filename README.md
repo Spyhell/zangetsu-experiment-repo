@@ -87,3 +87,5 @@ MIT.
 | Entertainment Live TV | Movie | 1.0.0 | ~900 live entertainment channels worldwide (Zee, Colors, Sony, reality, variety), direct HLS. |
 | SubsPlease | Anime | 1.0.0 | Current-season English-subbed anime, torrent magnets in 480p/720p/1080p, played by the app's torrent engine. |
 | Series Live TV | Movie | 1.0.0 | ~500 live 24/7 TV-series channels worldwide (drama, comedy, classic), direct HLS. |
+| MoviesDa | Movie | 1.0.0 | Tamil/Telugu/Malayalam/Kannada + Hindi-dubbed movies, direct signed mp4 per quality (480p/720p/1080p). |
+| Animation Live TV | Movie | 1.0.0 | ~160 live cartoon & anime channels (Animax, Anime Vision, Cartoon Network), direct HLS. |

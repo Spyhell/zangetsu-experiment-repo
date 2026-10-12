@@ -89,3 +89,5 @@ MIT.
 | Series Live TV | Movie | 1.0.0 | ~500 live 24/7 TV-series channels worldwide (drama, comedy, classic), direct HLS. |
 | MoviesDa | Movie | 1.0.0 | Tamil/Telugu/Malayalam/Kannada + Hindi-dubbed movies, direct signed mp4 per quality (480p/720p/1080p). |
 | Animation Live TV | Movie | 1.0.0 | ~160 live cartoon & anime channels (Animax, Anime Vision, Cartoon Network), direct HLS. |
+| Odysee | Movie | 1.0.0 | Movies, series & anime from Odysee's public API — trending/new releases, direct mp4, no login. |
+| Comedy Live TV | Movie | 1.0.0 | ~215 live 24/7 comedy channels worldwide (stand-up, sitcoms), direct HLS. |

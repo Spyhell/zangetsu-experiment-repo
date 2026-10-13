@@ -469,6 +469,24 @@
    "name": "Comedy Live TV",
    "type": "movie",
    "version": "1.0.0"
-  }
+  },
+ {
+     "file": "providers/anilibria.js",
+     "id": "anilibria",
+     "lang": "en",
+     "logo": "icons/anilibria.png",
+     "name": "AniLibria",
+     "type": "anime",
+     "version": "1.0.0"
+ },
+    {
+        "file": "providers/ted.js",
+        "id": "ted",
+        "lang": "en",
+        "logo": "icons/ted.png",
+        "name": "TED Talks",
+        "type": "movie",
+        "version": "1.0.0"
+    }
  ]
 }

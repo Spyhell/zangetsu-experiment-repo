@@ -91,3 +91,5 @@ MIT.
 | Animation Live TV | Movie | 1.0.0 | ~160 live cartoon & anime channels (Animax, Anime Vision, Cartoon Network), direct HLS. |
 | Odysee | Movie | 1.0.0 | Movies, series & anime from Odysee's public API — trending/new releases, direct mp4, no login. |
 | Comedy Live TV | Movie | 1.0.0 | ~215 live 24/7 comedy channels worldwide (stand-up, sitcoms), direct HLS. |
+| NASA Video Library | Movie | 1.0.0 | NASA's public video library — Mars, Apollo, ISS, Artemis footage, direct mp4 (360p–Original) + English captions, no login. |
+| Travel Live TV | Movie | 1.0.0 | ~60 live 24/7 travel channels worldwide (destinations, beaches, adventure), direct HLS. |

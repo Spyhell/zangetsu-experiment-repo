@@ -93,3 +93,5 @@ MIT.
 | Comedy Live TV | Movie | 1.0.0 | ~215 live 24/7 comedy channels worldwide (stand-up, sitcoms), direct HLS. |
 | NASA Video Library | Movie | 1.0.0 | NASA's public video library — Mars, Apollo, ISS, Artemis footage, direct mp4 (360p–Original) + English captions, no login. |
 | Travel Live TV | Movie | 1.0.0 | ~60 live 24/7 travel channels worldwide (destinations, beaches, adventure), direct HLS. |
+| 9Anime | Anime | 1.0.0 | English sub + dub anime, HLS (Auto/1080p/720p/480p) with multi-language subtitles. |
+| VidSpark | Movie | 1.0.0 | Movies & TV shows via TMDB catalog, direct HLS (Auto/1080p/720p), no login. |

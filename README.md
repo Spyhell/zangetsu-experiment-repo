@@ -96,4 +96,4 @@ MIT.
 | 9Anime | Anime | 1.0.0 | English sub + dub anime, HLS (Auto/1080p/720p/480p) with multi-language subtitles. |
 | VidSpark | Movie | 1.0.0 | Movies & TV shows via TMDB catalog, direct HLS (Auto/1080p/720p), no login. |
 | WcoFlix | Anime | 1.0.0 | Cartoons + anime (sub & dub), direct mp4 (1080p/720p/480p), no login. |
-| DonghuaNation | Anime | 1.0.0 | Donghua (Chinese anime), HLS up to 4K with 20 subtitle languages incl. Hindi & English, no login. Latest ~23 episodes per ongoing series (site limit); full runs for movies/short series. |
+| DonghuaNation | Anime | 1.0.1 | Donghua (Chinese anime), HLS up to 4K with 20 subtitle languages incl. Hindi & English, no login. Latest ~23 episodes per ongoing series (site limit); full runs for movies/short series. |

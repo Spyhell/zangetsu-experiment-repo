@@ -42,7 +42,7 @@ var _DN_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (K
 function getInfo() {
   return {
     name: 'DonghuaNation', lang: 'en', baseUrl: _DN_SITE,
-    logo: _DN_SITE + '/uploads/series/library/abac4f72a5e3e3bc7cd397eca6eb3876.png', type: 'anime', version: '1.0.2'
+    logo: _DN_SITE + '/uploads/series/library/abac4f72a5e3e3bc7cd397eca6eb3876.png', type: 'anime', version: '1.0.3'
   };
 }
 
@@ -76,6 +76,36 @@ function _fetchJson(url, headers) {
   return _fetchText(url, headers).then(function (t) {
     try { return JSON.parse(t); }
     catch (e) { throw new Error('DonghuaNation: bad JSON from ' + url); }
+  });
+}
+
+/* Like _fetchJson but also returns the response's Set-Cookie header when the
+ * runtime exposes response headers (guarded — not every fetch build does). */
+function _fetchJsonWithHeaders(url, headers) {
+  var h = { 'User-Agent': _DN_UA, 'Accept-Language': 'en-US,en;q=0.9' };
+  if (headers) { for (var k in headers) h[k] = headers[k]; }
+  return _raceTimeout(fetch(url, { headers: h }).then(function (r) {
+    if (!r || !r.ok) throw new Error('DonghuaNation: HTTP ' + (r && r.status) + ' for ' + url);
+    var setCookie = '';
+    try {
+      if (r.headers) {
+        if (typeof r.headers.getSetCookie === 'function') {
+          var arr = r.headers.getSetCookie();
+          if (arr && arr.length) setCookie = arr.join('; ');
+        }
+        if (!setCookie && typeof r.headers.get === 'function') setCookie = r.headers.get('set-cookie') || '';
+        else if (!setCookie && r.headers['set-cookie']) setCookie = String(r.headers['set-cookie']);
+      }
+    } catch (e) {}
+    return r.text().then(function (t) {
+      var data = null;
+      try { data = JSON.parse(t); }
+      catch (e2) { throw new Error('DonghuaNation: bad JSON from ' + url); }
+      return { data: data, setCookie: setCookie };
+    });
+  }), 20000, null).then(function (v) {
+    if (v == null) throw new Error('DonghuaNation: timeout for ' + url);
+    return v;
   });
 }
 
@@ -331,7 +361,7 @@ function _resolveServer(cfgPath) {
   return _fetchJson(_DN_SITE + cfgPath, { 'Referer': _DN_SITE + '/' }).then(function (cfg) {
     if (!cfg) return null;
     if (cfg.provider === 'dailymotion' && cfg.video_id) {
-      return { type: 'dm', videoId: String(cfg.video_id) };
+      return { type: 'dm', videoId: String(cfg.video_id), playerId: cfg.player_id ? String(cfg.player_id) : '' };
     }
     var eu = cfg.embed_url ? String(cfg.embed_url) : '';
     if (!eu) return null;
@@ -350,14 +380,20 @@ function _resolveServer(cfgPath) {
 }
 
 /* Dailymotion: the public player metadata endpoint returns the signed HLS
- * manifest (qualities.auto) + any caption tracks. The manifest host
- * (cdndirector) refuses this build VM's datacenter IP with a Cloudflare 403
- * under every header combo, so variant expansion may come back empty here —
- * the lone Auto entry is still returned and the phone's network is the real
- * verdict (same pattern as MP4Upload/AniLibria VM blocks). */
-function _dmStreams(server, videoId) {
+ * manifest (qualities.auto) + any caption tracks.
+ * v1.0.3 — the user's phone log showed the app resolving this fine but the
+ * manifest host (cdndirector) answering 403 to both the app fetch and the
+ * player, while the SAME episode plays on the site in the phone's browser.
+ * Difference: the browser carries Dailymotion's visitor cookie. The metadata
+ * response sets `v1st` and the manifest URL carries the matching `dmV1st`
+ * (verified identical values); cdndirector refuses requests without the
+ * cookie. So the entries now carry Cookie: v1st=... (harvested from the
+ * metadata response's Set-Cookie when the runtime exposes it, else parsed
+ * from the manifest URL's dmV1st) + the official player page as Referer. */
+function _dmStreams(server, videoId, playerId) {
   var metaUrl = 'https://www.dailymotion.com/player/metadata/video/' + videoId;
-  return _fetchJson(metaUrl, { 'Referer': _DN_SITE + '/' }).then(function (meta) {
+  return _fetchJsonWithHeaders(metaUrl, { 'Referer': _DN_SITE + '/' }).then(function (res) {
+    var meta = res.data;
     if (!meta) throw new Error('DonghuaNation: empty Dailymotion metadata');
     var subs = [];
     var subData = (meta.subtitles && meta.subtitles.data) || {};
@@ -379,6 +415,25 @@ function _dmStreams(server, videoId) {
       }
     }
     var headers = { 'Referer': 'https://www.dailymotion.com/', 'User-Agent': _DN_UA };
+    var refM = /[?&]dmV1st=([A-Za-z0-9]+)/.exec(autoUrl || '');
+    var cookiePairs = [];
+    var sc = res.setCookie || '';
+    /* v1st is the pair cdndirector checks against the URL's dmV1st — take it
+     * from Set-Cookie when visible, else from the manifest URL itself (the
+     * two values are identical; the URL path works even when the runtime
+     * hides response headers). */
+    var v1m = /(?:^|[,;])\s*v1st=([^;,\s]+)/.exec(sc);
+    if (v1m) cookiePairs.push('v1st=' + v1m[1]);
+    else if (refM) cookiePairs.push('v1st=' + refM[1]);
+    var extraNames = ['dmvk', 'ts'];
+    for (var ci = 0; ci < extraNames.length; ci++) {
+      var cm = new RegExp('(?:^|[,;])\\s*' + extraNames[ci] + '=([^;,\\s]+)').exec(sc);
+      if (cm) cookiePairs.push(extraNames[ci] + '=' + cm[1]);
+    }
+    if (cookiePairs.length) headers['Cookie'] = cookiePairs.join('; ');
+    if (meta.id) {
+      headers['Referer'] = 'https://geo.dailymotion.com/player/' + (playerId || 'x1j18a') + '.html?video=' + meta.id;
+    }
     var kind = /dub/.test(server.mode) ? 'dub' : 'sub';
     var finish = function (variants) {
       var out = [];
@@ -498,7 +553,7 @@ function getVideoSources(episodeUrl) {
           if (seenEmbed[key]) return null;
           seenEmbed[key] = true;
           var built = (desc.type === 'dm')
-            ? _dmStreams(server, desc.videoId)
+            ? _dmStreams(server, desc.videoId, desc.playerId)
             : _playerConfig(desc.embedUrl).then(function (resolved) { return _serverStreams(server, resolved); });
           return built.then(function (entries) {
             var bucket = (desc.type === 'dm') ? dmAll : playerAll;

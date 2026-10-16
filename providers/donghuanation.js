@@ -17,9 +17,14 @@
  *            inside data-mode groups (hard_sub / multi_sub).
  *   Config : GET that URL                     -> {embed_url:"/stream/embed/<b64>"}
  *            b64 JSON .u = https://xianxiaplayer.online/embed/<uuid>
- *            (Dailymotion returns an empty embed_url and Rumble a rumble.com
- *            embed from here — both skipped; the Myplayer-family servers
- *            resolve through xianxiaplayer.)
+ *            (Rumble returns a rumble.com embed — skipped, and its videos
+ *            are sometimes deleted upstream anyway.)
+ *   Dailymotion servers (some episodes have ONLY Dailymotion + Rumble — e.g.
+ *            The Demon Hunter S3 EP7, caught by the user's phone test):
+ *            config returns {provider:"dailymotion", video_id} instead ->
+ *            GET dailymotion.com/player/metadata/video/<id> ->
+ *            qualities.auto = signed HLS master (cdndirector host 403s this
+ *            build VM's IP; phone network is the verdict) + caption tracks.
  *   Player : GET the embed page               -> contains
  *            /api/v1/embed/<uuid>/config?token=... ; GET it ->
  *            {data:{sources:[{src: signed HLS master}], tracks:[{src,
@@ -37,7 +42,7 @@ var _DN_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (K
 function getInfo() {
   return {
     name: 'DonghuaNation', lang: 'en', baseUrl: _DN_SITE,
-    logo: _DN_SITE + '/uploads/series/library/abac4f72a5e3e3bc7cd397eca6eb3876.png', type: 'anime', version: '1.0.0'
+    logo: _DN_SITE + '/uploads/series/library/abac4f72a5e3e3bc7cd397eca6eb3876.png', type: 'anime', version: '1.0.1'
   };
 }
 
@@ -312,9 +317,17 @@ function _parseServers(html) {
   return servers;
 }
 
-function _resolveEmbed(cfgPath) {
+/* Resolve one server button to a descriptor:
+ *   {type:'player', embedUrl}  — xianxiaplayer chain (Myplayer family)
+ *   {type:'dm', videoId}       — Dailymotion web-sdk servers
+ *   null                       — rumble embeds / empty / unknown (skipped) */
+function _resolveServer(cfgPath) {
   return _fetchJson(_DN_SITE + cfgPath, { 'Referer': _DN_SITE + '/' }).then(function (cfg) {
-    var eu = cfg && cfg.embed_url ? String(cfg.embed_url) : '';
+    if (!cfg) return null;
+    if (cfg.provider === 'dailymotion' && cfg.video_id) {
+      return { type: 'dm', videoId: String(cfg.video_id) };
+    }
+    var eu = cfg.embed_url ? String(cfg.embed_url) : '';
     if (!eu) return null;
     var candidate = null;
     if (eu.indexOf('/stream/embed/') >= 0) {
@@ -326,10 +339,71 @@ function _resolveEmbed(cfgPath) {
     } else if (/^https?:\/\//i.test(eu)) {
       candidate = eu;
     }
-    /* Only the xianxiaplayer chain is resolvable to HLS; rumble/dailymotion
-     * embeds and empty URLs end here. */
-    return (candidate && /xianxiaplayer\.online/i.test(candidate)) ? candidate : null;
-  }).then(function (u) { return u; }, function () { return null; });
+    return (candidate && /xianxiaplayer\.online/i.test(candidate)) ? { type: 'player', embedUrl: candidate } : null;
+  }).then(function (d) { return d; }, function () { return null; });
+}
+
+/* Dailymotion: the public player metadata endpoint returns the signed HLS
+ * manifest (qualities.auto) + any caption tracks. The manifest host
+ * (cdndirector) refuses this build VM's datacenter IP with a Cloudflare 403
+ * under every header combo, so variant expansion may come back empty here —
+ * the lone Auto entry is still returned and the phone's network is the real
+ * verdict (same pattern as MP4Upload/AniLibria VM blocks). */
+function _dmStreams(server, videoId) {
+  var metaUrl = 'https://www.dailymotion.com/player/metadata/video/' + videoId;
+  return _fetchJson(metaUrl, { 'Referer': _DN_SITE + '/' }).then(function (meta) {
+    if (!meta) throw new Error('DonghuaNation: empty Dailymotion metadata');
+    var subs = [];
+    var subData = (meta.subtitles && meta.subtitles.data) || {};
+    for (var key in subData) {
+      var entry = subData[key];
+      if (entry && entry.urls && entry.urls.length) {
+        subs.push({ url: String(entry.urls[0]), lang: key.split('-')[0], label: String(entry.label || key) });
+      }
+    }
+    var qualities = meta.qualities || {};
+    var autoUrl = null;
+    var direct = [];
+    for (var q in qualities) {
+      var list = qualities[q] || [];
+      for (var i = 0; i < list.length; i++) {
+        if (!list[i] || !list[i].url) continue;
+        if (q === 'auto') { if (!autoUrl) autoUrl = String(list[i].url); }
+        else if (/^\d+$/.test(q)) direct.push({ h: parseInt(q, 10), url: String(list[i].url) });
+      }
+    }
+    var headers = { 'Referer': 'https://www.dailymotion.com/', 'User-Agent': _DN_UA };
+    var kind = /dub/.test(server.mode) ? 'dub' : 'sub';
+    var finish = function (variants) {
+      var out = [];
+      var seenH = {};
+      var all = direct.concat(variants);
+      all.sort(function (a, b) { return a.h - b.h; });
+      for (var i = 0; i < all.length; i++) {
+        if (seenH[all[i].h]) continue;
+        seenH[all[i].h] = true;
+        var lbl = all[i].h + 'p';
+        out.push({
+          url: all[i].url, quality: lbl,
+          label: server.name + ' · ' + lbl,
+          container: 'hls', headers: headers,
+          subtitles: subs, kind: kind
+        });
+      }
+      if (autoUrl) {
+        out.push({
+          url: autoUrl, quality: 'auto',
+          label: server.name + ' · Auto',
+          container: 'hls', headers: headers,
+          subtitles: subs, kind: kind
+        });
+      }
+      return out;
+    };
+    if (!autoUrl && !direct.length) throw new Error('DonghuaNation: Dailymotion metadata has no stream');
+    if (!autoUrl) return finish([]);
+    return _expandQualities(autoUrl, headers).then(finish);
+  });
 }
 
 function _playerConfig(embedUrl) {
@@ -355,8 +429,8 @@ function _playerConfig(embedUrl) {
   });
 }
 
-function _expandQualities(masterUrl) {
-  return _fetchText(masterUrl, { 'Referer': _DN_PLAYER + '/' }).then(function (text) {
+function _expandQualities(masterUrl, headers) {
+  return _fetchText(masterUrl, headers || { 'Referer': _DN_PLAYER + '/' }).then(function (text) {
     var variants = [];
     var seenH = {};
     var lines = String(text || '').split('\n');
@@ -407,22 +481,31 @@ function getVideoSources(episodeUrl) {
     var servers = _parseServers(html);
     if (!servers.length) throw new Error('DonghuaNation: no servers found on watch page');
     var seenEmbed = {};
-    var all = [];
+    var dmAll = [];
+    var playerAll = [];
     var chain = Promise.resolve();
     servers.forEach(function (server) {
       chain = chain.then(function () {
-        return _resolveEmbed(server.cfgPath).then(function (embedUrl) {
-          if (!embedUrl || seenEmbed[embedUrl]) return null;
-          seenEmbed[embedUrl] = true;
-          return _playerConfig(embedUrl).then(function (resolved) {
-            return _serverStreams(server, resolved).then(function (entries) {
-              for (var i = 0; i < entries.length; i++) all.push(entries[i]);
-            });
+        return _resolveServer(server.cfgPath).then(function (desc) {
+          if (!desc) return null;
+          var key = desc.type === 'dm' ? 'dm:' + desc.videoId : 'player:' + desc.embedUrl;
+          if (seenEmbed[key]) return null;
+          seenEmbed[key] = true;
+          var built = (desc.type === 'dm')
+            ? _dmStreams(server, desc.videoId)
+            : _playerConfig(desc.embedUrl).then(function (resolved) { return _serverStreams(server, resolved); });
+          return built.then(function (entries) {
+            var bucket = (desc.type === 'dm') ? dmAll : playerAll;
+            for (var i = 0; i < entries.length; i++) bucket.push(entries[i]);
           });
         }).then(function () {}, function () {});
       });
     });
     return chain.then(function () {
+      /* Dailymotion groups first, Myplayer groups last: the app auto-plays
+       * the LAST link, and the Myplayer chain (20 subs, up to 4K) is the
+       * strongest — it must stay the final entry whenever it exists. */
+      var all = dmAll.concat(playerAll);
       if (!all.length) throw new Error('DonghuaNation: no playable server resolved for ' + wm[1]);
       return all;
     });

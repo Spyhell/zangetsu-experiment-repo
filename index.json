@@ -523,6 +523,15 @@
    "name": "VidSpark",
    "type": "movie",
    "version": "1.0.0"
+  },
+  {
+   "file": "providers/wcoflix.js",
+   "id": "wcoflix",
+   "lang": "en",
+   "logo": "icons/wcoflix.png",
+   "name": "WcoFlix",
+   "type": "anime",
+   "version": "1.0.0"
   }
  ]
 }

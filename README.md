@@ -95,3 +95,4 @@ MIT.
 | Travel Live TV | Movie | 1.0.0 | ~60 live 24/7 travel channels worldwide (destinations, beaches, adventure), direct HLS. |
 | 9Anime | Anime | 1.0.0 | English sub + dub anime, HLS (Auto/1080p/720p/480p) with multi-language subtitles. |
 | VidSpark | Movie | 1.0.0 | Movies & TV shows via TMDB catalog, direct HLS (Auto/1080p/720p), no login. |
+| WcoFlix | Anime | 1.0.0 | Cartoons + anime (sub & dub), direct mp4 (1080p/720p/480p), no login. |

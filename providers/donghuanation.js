@@ -42,7 +42,7 @@ var _DN_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (K
 function getInfo() {
   return {
     name: 'DonghuaNation', lang: 'en', baseUrl: _DN_SITE,
-    logo: _DN_SITE + '/uploads/series/library/abac4f72a5e3e3bc7cd397eca6eb3876.png', type: 'anime', version: '1.0.1'
+    logo: _DN_SITE + '/uploads/series/library/abac4f72a5e3e3bc7cd397eca6eb3876.png', type: 'anime', version: '1.0.2'
   };
 }
 
@@ -123,16 +123,22 @@ function _absUrl2(href) {
   return _DN_SITE + '/' + href;
 }
 
-/* Home/card covers go through /img.php?url=<original>&w=320 — unwrap to the
- * original image when possible, else use the proxy URL itself. */
+/* Covers: the site's cards route external posters through its own
+ * /img.php?url=...&w=320 proxy for a reason — the originals refuse direct
+ * hotlinking (donghuaobsession.online drops direct requests entirely;
+ * myanimelist.net 301s). v1.0.0/v1.0.1 unwrapped to the original and the
+ * app showed blank posters (user report). So: keep proxied URLs proxied,
+ * and wrap any other external cover in the same proxy. */
 function _cover(src) {
   src = _decodeEntities(String(src || ''));
   if (!src) return null;
-  var m = /[?&]url=([^&]+)/.exec(src);
-  if (src.indexOf('img.php') >= 0 && m) {
-    try { return decodeURIComponent(m[1]); } catch (e) {}
+  if (src.indexOf('img.php') >= 0) return _absUrl2(src);
+  var abs = _absUrl2(src);
+  if (!abs) return null;
+  if (abs.indexOf(_DN_SITE + '/') !== 0) {
+    return _DN_SITE + '/img.php?url=' + encodeURIComponent(abs) + '&w=320';
   }
-  return _absUrl2(src);
+  return abs;
 }
 
 function _slugFromItemUrl(url) {
@@ -221,7 +227,7 @@ function search(query) {
         title: String(r.title || r.slug),
         url: 'donghuanation://anime/' + r.slug,
         type: (r.type && /movie/i.test(String(r.type))) ? 'movie' : 'anime',
-        cover: _absUrl2(r.cover_image)
+        cover: _cover(r.cover_image)
       });
     }
     return items;

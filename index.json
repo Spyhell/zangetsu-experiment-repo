@@ -559,6 +559,15 @@
       "name": "MonosChinos",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/anv.js",
+      "id": "anv",
+      "lang": "en",
+      "logo": "icons/anv.png",
+      "name": "Anv",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

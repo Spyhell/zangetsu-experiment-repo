@@ -229,7 +229,7 @@ function _expandQualities(masterUrl, headers) {
 function getInfo() {
   return {
     name: 'Anv', id: 'anv', baseUrl: _ANV, lang: 'en',
-    logo: _ANV + '/brand/blob.svg', type: 'anime', version: '1.0.1'
+    logo: _ANV + '/brand/blob.svg', type: 'anime', version: '1.0.2'
   };
 }
 
@@ -237,9 +237,9 @@ function getHome() {
   var catalogP = _catalog('HomeAnime', {}).then(function (data) {
     var rows = [];
     var hero = _items((data.hero || {}).media);
-    if (hero.length) rows.push({ name: 'Spotlight', items: hero });
+    if (hero.length) rows.push({ title: 'Spotlight', items: hero });
     var trending = _items((data.trending || {}).media);
-    if (trending.length) rows.push({ name: 'Trending Now', items: trending });
+    if (trending.length) rows.push({ title: 'Trending Now', items: trending });
     return rows;
   }, function () { return []; });
 
@@ -248,7 +248,7 @@ function getHome() {
     var sched = (j && j.schedules) || [];
     for (var i = 0; i < sched.length; i++) { if (sched[i] && sched[i].media) media.push(sched[i].media); }
     var items = _items(media);
-    return items.length ? [{ name: 'Latest Episodes', items: items }] : [];
+    return items.length ? [{ title: 'Latest Episodes', items: items }] : [];
   }, function () { return []; });
 
   return Promise.all([catalogP, recentP]).then(function (parts) {

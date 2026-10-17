@@ -229,7 +229,7 @@ function _expandQualities(masterUrl, headers) {
 function getInfo() {
   return {
     name: 'Anv', id: 'anv', baseUrl: _ANV, lang: 'en',
-    logo: _ANV + '/brand/blob.svg', type: 'anime', version: '1.0.2'
+    logo: _ANV + '/brand/blob.svg', type: 'anime', version: '1.0.3'
   };
 }
 
@@ -267,6 +267,20 @@ function _detailFromSlug(slug) {
   return _catalog('AnimeDetail', { slug: slug }).then(function (data) {
     var m = data.Media;
     if (!m) throw new Error('Anv: title not found');
+    /* Some releasing shows (e.g. One Piece) have episodes:null AND no
+     * nextAiringEpisode in the catalog, which would yield an empty episode
+     * list. The watch page's own data carries the count — read it from
+     * there. (This fetch also warms the play session early.) */
+    if (m.episodes == null && !m.nextAiringEpisode && m.format !== 'MOVIE') {
+      return _fetchText(_ANV + '/anime/' + slug + '-episode-1', { 'Accept': 'text/html' })
+        .then(function (html) {
+          var at = html.indexOf('"initial"');
+          var seg = at >= 0 ? html.substring(at, at + 900) : '';
+          var em = /"episodes":(\d+)/.exec(seg);
+          if (em) m.episodes = parseInt(em[1], 10);
+          return m;
+        }, function () { return m; });
+    }
     return m;
   });
 }

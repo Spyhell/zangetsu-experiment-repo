@@ -6,10 +6,13 @@
  * - Metadata comes from a GraphQL-style proxy: POST /api/catalog
  *   {operation, variables} -> {data}. Operations: HomeAnime (hero/trending
  *   rows), SearchAnime {search, page, perPage}, AnimeDetail {slug}.
- *   Media objects are AniList-shaped: id = 1000000000 + anilistId, slug,
+ *   Media objects are AniList-shaped: id is the site's own catalog id
+ *   (e.g. 1000000958 for Naruto — NOT the real AniList id), slug,
  *   title{english, romaji}, coverImage{extraLarge}, episodes, idMal,
  *   nextAiringEpisode. /api/recent-episodes (GET) gives latest releases.
  * - Playback: POST /api/episode {anilistId, malId, episode, first:true}
+ *   where anilistId = the full catalog id above (the site's client passes
+ *   it verbatim; any other id space silently resolves a different show).
  *   -> {status:'ready', variants:[{id:'sub'|'dub', sources:[{label, url,
  *   tracks}]}]}. Stream URLs are relative /stream/<token>/index.m3u8?k=...
  * - EVERYTHING under /api/episode and /stream/ is gated by the `shiro_watch`
@@ -226,7 +229,7 @@ function _expandQualities(masterUrl, headers) {
 function getInfo() {
   return {
     name: 'Anv', id: 'anv', baseUrl: _ANV, lang: 'en',
-    logo: _ANV + '/brand/blob.svg', type: 'anime', version: '1.0.0'
+    logo: _ANV + '/brand/blob.svg', type: 'anime', version: '1.0.1'
   };
 }
 
@@ -280,7 +283,11 @@ function _releasedCount(m) {
 
 function _episodeList(m) {
   var count = _releasedCount(m);
-  var anilistId = (typeof m.id === 'number' && m.id > 1000000000) ? m.id - 1000000000 : 0;
+  /* The episode API's anilistId is the FULL catalog id (1000000958 for
+   * Naruto) — the site's own client passes R.id verbatim. Deriving the
+   * real AniList id (id - 1e9) resolves a DIFFERENT show on their backend
+   * (verified by subtitle content, 2026-10-17). */
+  var anilistId = (typeof m.id === 'number') ? m.id : 0;
   var eps = [];
   for (var i = 1; i <= count; i++) {
     eps.push({

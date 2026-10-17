@@ -541,6 +541,24 @@
       "name": "DonghuaNation",
       "type": "anime",
       "version": "1.0.3"
+    },
+    {
+      "file": "providers/jkanime.js",
+      "id": "jkanime",
+      "lang": "es",
+      "logo": "icons/jkanime.png",
+      "name": "Jkanime",
+      "type": "anime",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/monoschinos.js",
+      "id": "monoschinos",
+      "lang": "es",
+      "logo": "icons/monoschinos.png",
+      "name": "MonosChinos",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

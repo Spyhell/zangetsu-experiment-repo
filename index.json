@@ -306,7 +306,7 @@
       "logo": "icons/anikoto.png",
       "name": "AniKoto",
       "type": "anime",
-      "version": "1.0.2"
+      "version": "1.0.3"
     },
     {
       "file": "providers/animegg.js",

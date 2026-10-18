@@ -55,7 +55,7 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | DesiDub Anime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, HLS streams via VidMoly. |
 | Orphaned Films | Movie | 1.0.2 | Curated public-domain & forgotten films (Film Noir, Silent, Sci-Fi/Horror, VHS Vault), direct archive.org MP4. |
 | ToonStream | Anime | 1.0.0 | Anime, movies & cartoons (incl. Hindi/Tamil/Telugu dubs), HLS via VidMoly. |
-| AniKoto | Anime | 1.0.0 | Anime streaming with sub & dub, HLS + subtitles. |
+| AniKoto | Anime | 1.0.1 | Anime streaming with sub & dub, HLS + subtitles. |
 | AnimeGG | Anime | 1.0.0 | Anime with sub & dub as separate streams, direct MP4 up to 1080p. |
 | Classic Cartoons | Anime | 1.0.0 | Public-domain classic cartoon shorts (Popeye, Betty Boop), direct MP4 from archive.org. |
 | Classic TV Vault | Movie | 1.0.0 | Public-domain vintage TV serials (Dragnet, Lone Ranger, Sherlock Holmes), direct MP4 from archive.org. |

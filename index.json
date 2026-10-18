@@ -568,6 +568,15 @@
       "name": "Anv",
       "type": "anime",
       "version": "1.0.3"
+    },
+    {
+      "file": "providers/hindianime.js",
+      "id": "hindianime",
+      "lang": "en",
+      "logo": "icons/hindianime.png",
+      "name": "HindiAnime",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

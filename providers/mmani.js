@@ -9,9 +9,9 @@ function getInfo() {
     name: 'MMani',
     lang: 'en',
     baseUrl: 'https://mmani.com',
-    logo: 'https://mmani.com/favicon.ico',
+    logo: 'https://www.google.com/s2/favicons?sz=256&domain=mmani.com',
     type: 'anime',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 

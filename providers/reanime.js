@@ -15,7 +15,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, l
 function getInfo() {
   return { name: 'Re:Anime', lang: 'en', baseUrl: SITE,
     logo: 'https://www.google.com/s2/favicons?sz=256&domain=reanime.to',
-    type: 'anime', version: '1.2.2' };
+    type: 'anime', version: '1.2.3' };
 }
 function getSettings() { return []; }
 
@@ -173,12 +173,28 @@ function _dedupeItems(list) {
   });
   return out;
 }
+// Some list entries ship anilist_id 0 (e.g. Blue Box Season 2) even though the
+// title's detail payload carries the real ID. A card without anilistId sends
+// the app down its AniList re-resolution path, where this source's episodes
+// never load and the "AniList is having a moment" banner appears. Fill the
+// missing IDs from the detail endpoint (bounded, best-effort).
+function _fillAnilistIds(items) {
+  var missing = items.filter(function (it) { return !it.anilistId; }).slice(0, 8);
+  if (!missing.length) return Promise.resolve(items);
+  return Promise.all(missing.map(function (it) {
+    return _detailData(it.id).then(function (d) {
+      var data = d && (d.data || d.anime || d);
+      var aid = Number(_anilistId(data));
+      if (aid) it.anilistId = aid;
+    }).catch(function () { return null; });
+  })).then(function () { return items; });
+}
 function search(query, page) {
   var q = String(query || '').trim();
   if (!q) return Promise.resolve([]);
   var p = Math.max(1, parseInt(page, 10) || 1);
   var url = API + '/search?limit=36&offset=' + ((p - 1) * 36) + '&q=' + encodeURIComponent(q);
-  return _json(url, SITE + '/search').then(_dedupeItems).catch(function () { return []; });
+  return _json(url, SITE + '/search').then(_dedupeItems).then(_fillAnilistIds).catch(function () { return []; });
 }
 function getHome() {
   var latestUrl = API + '/home/latest-aired?limit=12';
@@ -187,17 +203,18 @@ function getHome() {
     _json(latestUrl, SITE + '/home').catch(function () { return null; }),
     _json(popularUrl, SITE + '/search').catch(function () { return null; })
   ]).then(function (data) {
-    var latest = _dedupeItems(data[0]);
-    var popular = _dedupeItems(data[1]);
-    var rows = [];
-    if (latest.length) rows.push({ title: 'Latest Aired', items: latest });
-    if (popular.length) rows.push({ title: 'Popular Anime', items: popular });
-    return rows;
+    return Promise.all([_fillAnilistIds(_dedupeItems(data[0])), _fillAnilistIds(_dedupeItems(data[1]))])
+      .then(function (filled) {
+        var rows = [];
+        if (filled[0].length) rows.push({ title: 'Latest Aired', items: filled[0] });
+        if (filled[1].length) rows.push({ title: 'Popular Anime', items: filled[1] });
+        return rows;
+      });
   });
 }
 function popular() {
   return _json(API + '/search?sort=popularity_desc&limit=36&offset=0', SITE + '/search')
-    .then(_dedupeItems).catch(function () { return []; });
+    .then(_dedupeItems).then(_fillAnilistIds).catch(function () { return []; });
 }
 function _episode(ep, index, slug, anilistId) {
   var num = Number(_first(ep, ['episode_number', 'episodeNumber', 'number', 'episode']) || index + 1);
@@ -393,7 +410,7 @@ function getLinks(id, opts) { return getVideoSources(id, opts); }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    version: '1.2.2', getInfo: getInfo, getSettings: getSettings,
+    version: '1.2.3', getInfo: getInfo, getSettings: getSettings,
     getHome: getHome, popular: popular, search: search,
     getDetail: getDetail, getEpisodes: getEpisodes,
     getVideoSources: getVideoSources, getStreams: getStreams, getLinks: getLinks

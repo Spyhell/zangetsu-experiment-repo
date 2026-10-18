@@ -38,7 +38,7 @@ var MAPPER = 'https://mapper.nekostream.site/api/mal/';
 
 function getInfo() {
   return { name: 'AniKoto', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.2' };
+    logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.3' };
 }
 
 // MegaPlay/VidWish: getSourcesNew is the endpoint their player hits; both routes
@@ -613,7 +613,16 @@ function _extractPlayer(embed, cat, serverName) {
 
       function finish(skew) {
         var mk = function (u, q) {
-          var o = { url: u, label: (serverName || 'AniKoto') + ' · ' + cat, quality: q, container: /\.m3u8(\?|$)/i.test(u) ? 'hls' : 'mp4',
+          // AniKoto's servers are mirrors of ONE file per cut, so every
+          // entry resolves to the same URL — and the app's source picker
+          // collapses entries that share a URL, leaving only one visible
+          // server per cut. Tag each server's URL with a fragment so all
+          // servers stay listed; the fragment is never sent to the CDN,
+          // so playback is unchanged.
+          var tagged = u + '#anikoto-'
+            + String(serverName || 'server').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+            + '-' + cat;
+          var o = { url: tagged, label: (serverName || 'AniKoto') + ' · ' + cat, quality: q, container: /\.m3u8(\?|$)/i.test(u) ? 'hls' : 'mp4',
             headers: hdrs, kind: cat, audioLang: cat === 'dub' ? 'en' : 'ja', subtitles: subs };
           if (skew) {
             o.subtitleSkewSeconds = skew.seconds;

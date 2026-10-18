@@ -577,6 +577,15 @@
       "name": "HindiAnime",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "file": "providers/mmani.js",
+      "id": "mmani",
+      "lang": "en",
+      "logo": "icons/mmani.png",
+      "name": "MMani",
+      "type": "anime",
+      "version": "1.0.0"
     }
   ]
 }

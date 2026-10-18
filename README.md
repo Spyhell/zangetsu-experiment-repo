@@ -101,4 +101,3 @@ MIT.
 | Jkanime | Anime | 1.0.0 | Anime sub-español, direct HLS (Auto) via the site's own UM player, no login. |
 | MonosChinos | Anime | 1.0.0 | Anime sub-español, multi-server embeds (Okru/Mp4Upload extracted by the app), no login. |
 | HindiAnime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, signed HLS (Auto) via VidMoly embeds, no login. |
-| Re:Anime | Anime | 1.2.4 | Anime sub + dub via the site API (AniList IDs carried on items), FlixCloud streams resolved via decoder, no login. |

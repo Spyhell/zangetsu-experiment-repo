@@ -101,3 +101,4 @@ MIT.
 | Jkanime | Anime | 1.0.0 | Anime sub-español, direct HLS (Auto) via the site's own UM player, no login. |
 | MonosChinos | Anime | 1.0.0 | Anime sub-español, multi-server embeds (Okru/Mp4Upload extracted by the app), no login. |
 | HindiAnime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, signed HLS (Auto) via VidMoly embeds, no login. |
+| MMani | Anime | 1.0.0 | Anime BD/WEB releases, English subbed HLS (720p/1080p) with English subtitles, no login. |

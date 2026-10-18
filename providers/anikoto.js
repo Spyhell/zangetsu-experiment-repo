@@ -38,7 +38,7 @@ var MAPPER = 'https://mapper.nekostream.site/api/mal/';
 
 function getInfo() {
   return { name: 'AniKoto', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.1' };
+    logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.2' };
 }
 
 // MegaPlay/VidWish: getSourcesNew is the endpoint their player hits; both routes
@@ -509,9 +509,22 @@ function _tryServersAll(list, cat) {
   var jobs = [];
   for (var i = 0; i < list.length; i++) jobs.push(_resolveServer(list[i], cat));
   return Promise.all(jobs).then(function (groups) {
-    var out = [];
-    for (var k = 0; k < groups.length; k++) out = out.concat(groups[k]);
-    return out;
+    // Hosts sometimes throttle the parallel burst and drop a server that
+    // would have answered on its own — give the empty ones ONE serial
+    // retry before settling for a shorter list.
+    var retryIdx = [];
+    for (var k = 0; k < groups.length; k++) if (!groups[k].length) retryIdx.push(k);
+    var chain = Promise.resolve();
+    retryIdx.forEach(function (idx) {
+      chain = chain.then(function () {
+        return _resolveServer(list[idx], cat).then(function (g) { groups[idx] = g; });
+      });
+    });
+    return chain.then(function () {
+      var out = [];
+      for (var k2 = 0; k2 < groups.length; k2++) out = out.concat(groups[k2]);
+      return out;
+    });
   });
 }
 function _mapperServersAll(token, cat) {

@@ -577,15 +577,6 @@
       "name": "HindiAnime",
       "type": "anime",
       "version": "1.0.0"
-    },
-    {
-      "file": "providers/reanime.js",
-      "id": "reanime",
-      "lang": "en",
-      "logo": "icons/reanime.png",
-      "name": "Re:Anime",
-      "type": "anime",
-      "version": "1.2.4"
     }
   ]
 }

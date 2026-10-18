@@ -15,7 +15,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, l
 function getInfo() {
   return { name: 'Re:Anime', lang: 'en', baseUrl: SITE,
     logo: 'https://www.google.com/s2/favicons?sz=256&domain=reanime.to',
-    type: 'anime', version: '1.2.3' };
+    type: 'anime', version: '1.2.4' };
 }
 function getSettings() { return []; }
 
@@ -250,7 +250,8 @@ function getDetail(url) {
     item.description = String(d.description || '');
     item.status = String(d.status || 'unknown').toLowerCase();
     item.genres = Array.isArray(d.genres) ? d.genres : [];
-    item.year = d.season_year || (d.start_date && d.start_date.year) || null;
+    var _yr = d.season_year || (d.start_date && d.start_date.year) || null;
+    item.year = _yr ? String(_yr) : null; // app model wants year as String?; a numeric year crashes MediaDetail.fromJson
     item.malId = Number(d.mal_id || 0) || undefined;
     item.anilistId = Number(anilistId) || item.anilistId;
     item.episodes = episodes.map(function (ep, i) { return _episode(ep, i, slug, anilistId); });
@@ -410,7 +411,7 @@ function getLinks(id, opts) { return getVideoSources(id, opts); }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    version: '1.2.3', getInfo: getInfo, getSettings: getSettings,
+    version: '1.2.4', getInfo: getInfo, getSettings: getSettings,
     getHome: getHome, popular: popular, search: search,
     getDetail: getDetail, getEpisodes: getEpisodes,
     getVideoSources: getVideoSources, getStreams: getStreams, getLinks: getLinks

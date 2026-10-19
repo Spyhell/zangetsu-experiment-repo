@@ -38,7 +38,7 @@ var MAPPER = 'https://mapper.nekostream.site/api/mal/';
 
 function getInfo() {
   return { name: 'AniKoto', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.3' };
+    logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.4' };
 }
 
 // MegaPlay/VidWish: getSourcesNew is the endpoint their player hits; both routes
@@ -59,6 +59,30 @@ function _padBytes(s, n) {
   for (i = 0; i < n; i++) out[i] = 0;
   var b = String(s || '');
   for (i = 0; i < b.length && i < n; i++) out[i] = b.charCodeAt(i) & 0xff;
+  return out;
+}
+// Pure-JS base64 -> byte array. Self-contained: the app injects no base64
+// helper and the harness shim doesn't define one either. Same decoder as
+// animesuge's _b64decode (byte-verified against live megaplay `enc` blobs).
+var _B64B = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function base64ToBytes(b64) {
+  var clean = String(b64 || '').replace(/-/g, '+').replace(/_/g, '/')
+    .replace(/[^A-Za-z0-9+/=]/g, '');
+  // base64url payloads (e.g. the player's `enc`) often strip the `=` padding.
+  while (clean.length % 4 !== 0) clean += '=';
+  var out = [], i, j;
+  for (i = 0; i + 3 < clean.length + 1; i += 4) {
+    var n = 0, pad = 0;
+    for (j = 0; j < 4; j++) {
+      var ch = clean.charAt(i + j);
+      var v = (ch === '=') ? 0 : _B64B.indexOf(ch);
+      if (ch === '=') pad++;
+      n = (n << 6) | (v < 0 ? 0 : v);
+    }
+    out.push((n >> 16) & 255);
+    if (pad < 2) out.push((n >> 8) & 255);
+    if (pad < 1) out.push(n & 255);
+  }
   return out;
 }
 function _b64urlBytes(s) {

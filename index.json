@@ -586,6 +586,15 @@
             "name": "MMani",
             "type": "anime",
             "version": "1.0.1"
+        },
+        {
+            "file": "providers/nekosama.js",
+            "id": "nekosama",
+            "lang": "fr",
+            "logo": "icons/nekosama.png",
+            "name": "NekoSama",
+            "type": "anime",
+            "version": "1.0.0"
         }
     ]
 }

@@ -36,7 +36,7 @@ function getInfo() {
     baseUrl: _SITE,
     logo: 'https://raw.githubusercontent.com/Spyhell/zangetsu-experiment-repo/main/icons/anikage.png',
     type: 'anime',
-    version: '1.0.5'
+    version: '1.0.6'
   };
 }
 
@@ -158,7 +158,7 @@ function _item(it) {
     cover: _cover(it.coverImage),
     banner: it.bannerImage || '',
     subtitle: sub,
-    year: it.year || null,
+    year: it.year != null ? String(it.year) : null,
     rating: typeof it.averageScore === 'number' ? it.averageScore / 10 : null
   };
 }

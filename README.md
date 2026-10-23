@@ -61,6 +61,8 @@ Source repo for the [Zangetsu](https://github.com/Spyou/Zangetsu) app.
 | Classic TV Vault | Movie | 1.0.0 | Public-domain vintage TV serials (Dragnet, Lone Ranger, Sherlock Holmes), direct MP4 from archive.org. |
 | Sports Live TV | Movie | 1.0.0 | ~450 live sports channels worldwide (football, ESPN/beIN, outdoor sports), direct HLS. |
 | Movies Live TV | Movie | 1.0.0 | ~790 live 24/7 movie channels (action, comedy, classic, family, series), direct HLS. |
+| Cooking Live TV | Movie | 1.0.0 | ~59 live 24/7 cooking & food channels (BBC Food, bon appetit, America's Test Kitchen), direct HLS. |
+| Education Live TV | Movie | 1.0.0 | ~214 live 24/7 education channels (documentaries, kids learning, science, culture), direct HLS. |
 | TG Cloud | Movie | 2.1.2 | Stream Telegram files via your own pencarimovie-server (set Server URL + Password in settings). Works like Nuvio. |
 
 

@@ -613,6 +613,24 @@
             "name": "Red Bull TV",
             "type": "movie",
             "version": "1.0.0"
+        },
+        {
+            "file": "providers/cookinglivetv.js",
+            "id": "cookinglivetv",
+            "lang": "en",
+            "logo": "icons/cookinglivetv.png",
+            "name": "Cooking Live TV",
+            "type": "movie",
+            "version": "1.0.0"
+        },
+        {
+            "file": "providers/educationlivetv.js",
+            "id": "educationlivetv",
+            "lang": "en",
+            "logo": "icons/educationlivetv.png",
+            "name": "Education Live TV",
+            "type": "movie",
+            "version": "1.0.0"
         }
     ]
 }

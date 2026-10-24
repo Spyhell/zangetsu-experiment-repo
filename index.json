@@ -640,6 +640,24 @@
       "name": "AV1Please",
       "type": "anime",
       "version": "1.0.3"
+    },
+    {
+      "file": "providers/dramacool.js",
+      "id": "dramacool",
+      "lang": "en",
+      "logo": "icons/dramacool.png",
+      "name": "Dramacool",
+      "type": "movie",
+      "version": "1.0.0"
+    },
+    {
+      "file": "providers/moviesjoy.js",
+      "id": "moviesjoy",
+      "lang": "en",
+      "logo": "icons/moviesjoy.png",
+      "name": "MoviesJoy",
+      "type": "movie",
+      "version": "1.0.0"
     }
   ]
 }

@@ -685,6 +685,24 @@
       "name": "AnimeWorld",
       "type": "anime",
       "version": "1.0.0"
+    },
+    {
+      "id": "myasiantv",
+      "name": "MyAsianTV",
+      "version": "1.0.0",
+      "file": "providers/myasiantv.js",
+      "icon": "icons/myasiantv.png",
+      "type": "movie",
+      "lang": "en"
+    },
+    {
+      "id": "loc",
+      "name": "Library of Congress",
+      "version": "1.0.0",
+      "file": "providers/loc.js",
+      "icon": "icons/loc.png",
+      "type": "movie",
+      "lang": "en"
     }
   ]
 }

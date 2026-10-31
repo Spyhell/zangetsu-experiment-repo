@@ -18,7 +18,7 @@
       "logo": "icons/oppaistream.png",
       "name": "Oppai Stream",
       "type": "anime",
-      "version": "1.0.3"
+      "version": "1.0.4"
     },
     {
       "file": "providers/hanime.js",

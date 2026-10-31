@@ -703,6 +703,24 @@
       "icon": "icons/loc.png",
       "type": "movie",
       "lang": "en"
+    },
+    {
+      "id": "animetsu",
+      "name": "Animetsu",
+      "version": "1.0.0",
+      "file": "providers/animetsu.js",
+      "icon": "icons/animetsu.png",
+      "type": "anime",
+      "lang": "en"
+    },
+    {
+      "id": "animeowl",
+      "name": "AnimeOwl",
+      "version": "1.0.0",
+      "file": "providers/animeowl.js",
+      "icon": "icons/animeowl.png",
+      "type": "anime",
+      "lang": "en"
     }
   ]
 }

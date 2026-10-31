@@ -1,17 +1,23 @@
 // Oppai Stream — anime source for the Zangetsu provider repo (oppai.stream).
 //
-// Hentai streaming site. Everything comes from the site's own actions:
-//   /actions/search.php?text=<q>&page=<p>&limit=<n>  -> episode cards (search)
-//   /actions/results.php?sc=<section>&am=<n>&of=0    -> home rows
-//   /watch?e=<slug>-<ep>                            -> availableres {720,1080,4k}
-//
-// Cards are per-episode:
-//   <div class='in-grid episode-shown' idgt='<show id>' folder='<folder>'
-//        ep='<n>' tags='a,b,c' name='<show>' desc='...'>
-// with a watch link (watch?e=...) and a cover-img-in thumbnail. Search/home
-// dedupe cards by idgt into show cards; getDetail re-searches the show's
-// folder name to list its episodes. The watch page carries an `availableres`
-// JSON map of direct mp4/webm files, so no embed chain is needed.
+// 2026-10-31: site came back from its "maintenance" outage on a new stack.
+// Old routes are gone (/actions/search.php and /actions/results.php 404).
+// New routes:
+//   POST /api/search.php {text,tags,blacklist,studios,order,limit,page,
+//        classes,character_filters} -> episode cards (search)
+//   GET /                                          -> home rows (server-rendered
+//        episode cards in #recent / #trending / #random sections)
+//   /watch/<Folder>-<ep>                            -> inline JS vars
+//        (folder, res like "4k-2", storageBase) + <track> subtitles
+// New card shape (per-episode):
+//   <a href=".../watch/<Folder>-<ep>/from/<src>" class="episode"
+//      epid="<ep>" data-folder="<Folder>-<ep>">
+//     <img class="cover" src="<thumb>" alt="<Title> Episode <ep> thumbnail">
+//     <p class="episode-title"><Title></p><p class="episode-number"><ep></p>
+// Video file: <storageBase>/<Folder>/ep.<ext>  (ext from res map: 1=mp4,2=webm)
+// DASH:       <storageBase>/<Folder>/dash/manifest.mpd (app can't play DASH,
+//             so we ship the direct file URL)
+// Shows are grouped by data-folder minus the trailing -<ep>.
 
 var SOURCE_ID = (typeof __SOURCE_ID !== 'undefined' && __SOURCE_ID)
   ? String(__SOURCE_ID) : 'oppaistream';
@@ -22,7 +28,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 function getInfo() {
   return { name: 'Oppai Stream', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.3' };
+    logo: SITE + '/assets/logo.png', type: 'anime', version: '1.0.4' };
 }
 
 function _get(url, ref) {
@@ -31,57 +37,68 @@ function _get(url, ref) {
     .catch(function () { return ''; });
 }
 
-// Parse the key='value' attributes off an episode card div tag.
-function _attrs(tag) {
-  var o = {}, m, re = /(\w[\w-]*)='([^']*)'/g;
-  while ((m = re.exec(tag)) !== null) o[m[1]] = m[2];
-  return o;
+function _post(url, ref, fields) {
+  var body = Object.keys(fields).map(function (k) {
+    return encodeURIComponent(k) + '=' + encodeURIComponent(fields[k]);
+  }).join('&');
+  return fetch(url, { method: 'POST',
+    headers: { 'User-Agent': UA, 'Referer': ref || SITE + '/',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest' },
+    body: body })
+    .then(function (r) { return r.body || ''; })
+    .catch(function () { return ''; });
 }
 
-// Split the results/search HTML into episode cards.
+function _searchFields(q, page, limit) {
+  return { text: q, tags: '', blacklist: '', studios: '', order: '',
+    limit: String(limit || 24), page: String(page || 1),
+    classes: 'smaller-episode-gap', character_filters: '{}' };
+}
+
+// Split the search/home HTML into episode cards (new 2026-10-31 shape).
 function _parseCards(html) {
-  var out = [], chunks = String(html || '').split("<div class='in-grid episode-shown'");
-  for (var i = 1; i < chunks.length; i++) {
-    var c = chunks[i];
-    var tagEnd = c.indexOf('>');
-    var a = _attrs(tagEnd < 0 ? '' : c.substring(0, tagEnd));
-    if (!a.idgt || !a.folder) continue;
-    var href = (c.match(/<a[^>]+href='([^']*watch\?e=[^']*)'/) || [])[1];
-    // The img tag carries an onError fallback (this.src='.../maintenanceN.png'):
-    // strip it first or the fallback URL wins over the real thumbnail.
-    var imgTag = (c.match(/<img[^>]*class='cover-img-in'[^>]*>/) || [])[0] || '';
-    imgTag = imgTag.replace(/onError="[^"]*"/g, '');
-    var cover = (imgTag.match(/\ssrc='([^']+)'/) || [])[1];
-    out.push({
-      showId: a.idgt,
-      folder: a.folder,
-      ep: parseInt(a.ep || '1', 10) || 1,
-      title: a.name || a.folder,
-      desc: a.desc || '',
-      tags: (a.tags || '').split(',').filter(function (t) { return t; }),
+  var out = [], m;
+  var re = /<a href="(https:\/\/oppai\.stream\/watch\/[^"]+)" class="episode[^"]*" epid="(\d+)" data-folder="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g;
+  while ((m = re.exec(html))) {
+    var ep = parseInt(m[2], 10) || 0;
+    var folder = m[3];
+    var inner = m[4];
+    var t = inner.match(/episode-title">([^<]+)</);
+    var title = (t ? t[1] : folder).trim();
+    var c = inner.match(/<img class="cover"[^>]*src="([^"]+)"/);
+    var cover = c ? c[1] : null;
+    // show folder: data-folder minus the trailing -<ep>
+    var showFolder = folder;
+    var tail = '-' + ep;
+    if (ep && showFolder.slice(-tail.length) === tail)
+      showFolder = showFolder.slice(0, -tail.length);
+    var watch = m[1].split('/from/')[0];
+    out.push({ showTitle: title, showFolder: showFolder, ep: ep, title: title,
       cover: cover ? cover.split(' ').join('%20') : null,
-      watch: href || null
-    });
+      watch: watch.split(' ').join('%20') });
   }
   return out;
 }
 
 function _showUrl(c) {
-  return 'oppaistream://show/' + c.showId + '/' + encodeURIComponent(c.folder);
+  return 'oppaistream://show/' + encodeURIComponent(c.showFolder)
+    + '/' + encodeURIComponent(c.showTitle);
 }
 
 function _showCard(c) {
-  return { id: 'oppaistream:' + c.showId, title: htmlText(c.title).trim(),
-    url: _showUrl(c), cover: c.cover, type: 'anime', sourceId: SOURCE_ID };
+  return { id: 'oppaistream:' + encodeURIComponent(c.showFolder),
+    title: htmlText(c.showTitle).trim(), url: _showUrl(c),
+    cover: c.cover, type: 'anime', sourceId: SOURCE_ID };
 }
 
-// One show per idgt; keep the first (newest) card's cover/metadata.
+// One show per showFolder; keep the first (newest) card's cover/metadata.
 function _dedupe(cards) {
   var seen = {}, out = [];
   for (var i = 0; i < cards.length; i++) {
     var c = cards[i];
-    if (seen[c.showId]) continue;
-    seen[c.showId] = 1;
+    if (seen[c.showFolder]) continue;
+    seen[c.showFolder] = 1;
     out.push(_showCard(c));
   }
   return out;
@@ -91,79 +108,73 @@ function _dedupe(cards) {
 function search(query, page, opts) {
   var q = String(query || '').trim();
   if (!q) return Promise.resolve([]);
-  var url = SITE + '/actions/search.php?text=' + encodeURIComponent(q)
-    + '&order=&page=' + (page || 1) + '&limit=24'
-    + '&genres=&blacklist=&studio=&ibt=0';
-  return _get(url, SITE + '/search').then(function (html) {
+  return _post(SITE + '/api/search.php', SITE + '/search',
+    _searchFields(q, page, 24)).then(function (html) {
     return _dedupe(_parseCards(html));
   }).catch(function () { return []; });
 }
 
 // ── Home ────────────────────────────────────────────────────────────────────
 var _SECTIONS = [
-  ['uploaded', 'New Episodes'],
-  ['weekly-views', 'Trending'],
-  ['recent', 'Recently Added'],
+  ['recent', 'New Episodes'],
+  ['trending', 'Trending'],
   ['random', 'Random']
 ];
 
-function _homeSection(sc) {
-  var url = SITE + '/actions/results.php?sc=' + sc + '&am=12&of=0&sts=1&ibt=0';
-  return _get(url, SITE + '/').then(function (html) {
-    return _dedupe(_parseCards(html));
-  }).catch(function () { return []; });
+function _homeSection(html, sid) {
+  var re = new RegExp('<div class="episode-box[^"]*" id="' + sid + '"'
+    + '([\\s\\S]*?)(?=<div class="episode-box|</body|$)');
+  var m = html.match(re);
+  return m ? _dedupe(_parseCards(m[1])) : [];
 }
 
 function getHome(opts) {
-  var jobs = _SECTIONS.map(function (s) {
-    return _homeSection(s[0]).then(function (items) {
-      return { title: s[1], items: items };
-    });
+  return _get(SITE + '/').then(function (html) {
+    if (!html) throw new Error('OppaiStream: home fetch failed');
+    var rows = [];
+    for (var i = 0; i < _SECTIONS.length; i++) {
+      var items = _homeSection(html, _SECTIONS[i][0]);
+      if (items.length) rows.push({ title: _SECTIONS[i][1], items: items });
+    }
+    if (!rows.length) throw new Error('OppaiStream: no home items');
+    return rows;
   });
-  return Promise.all(jobs).then(function (rows) {
-    return rows.filter(function (r) { return r.items.length; });
-  }).catch(function () { return []; });
 }
 
 // ── Detail + episodes ───────────────────────────────────────────────────────
 function _parseShowUrl(url) {
   var m = String(url || '').match(/^oppaistream:\/\/show\/([^/]+)\/(.+)$/);
   if (!m) return null;
-  return { id: m[1], folder: decodeURIComponent(m[2]) };
+  return { folder: decodeURIComponent(m[1]), title: decodeURIComponent(m[2]) };
 }
 
 function getDetail(url, opts) {
   var ref = _parseShowUrl(url);
   var base = { id: null, title: '', url: url, cover: null, description: '',
-    status: 'unknown', genres: [], studios: [], type: 'anime',
-    sourceId: SOURCE_ID, episodes: [], year: null, malId: null,
-    subCount: 0, dubCount: 0 };
+    type: 'anime', sourceId: SOURCE_ID, episodes: [], year: null };
   if (!ref) return Promise.resolve(base);
-  var q = SITE + '/actions/search.php?text=' + encodeURIComponent(ref.folder)
-    + '&order=&page=1&limit=60&genres=&blacklist=&studio=&ibt=0';
-  return _get(q, SITE + '/').then(function (html) {
+  return _post(SITE + '/api/search.php', SITE + '/',
+    _searchFields(ref.title, 1, 60)).then(function (html) {
     var cards = _parseCards(html).filter(function (c) {
-      return String(c.showId) === String(ref.id);
+      return c.showFolder === ref.folder ||
+        c.showTitle.toLowerCase() === ref.title.toLowerCase();
     });
     if (!cards.length) return base;
     var first = cards[0];
-    base.id = 'oppaistream:' + ref.id;
-    base.title = htmlText(first.title).trim();
+    base.id = 'oppaistream:' + encodeURIComponent(ref.folder);
+    base.title = htmlText(first.showTitle).trim();
     base.cover = first.cover;
-    base.description = htmlText(first.desc).trim();
-    base.genres = first.tags;
     var eps = [], seenEp = {};
     for (var i = 0; i < cards.length; i++) {
       var c = cards[i];
-      if (seenEp[c.ep] || !c.watch) continue;
+      if (!c.ep || seenEp[c.ep] || !c.watch) continue;
       seenEp[c.ep] = 1;
       eps.push({ id: 'ep:' + c.ep, number: c.ep,
-        title: htmlText(first.title).trim() + ' Episode ' + c.ep,
+        title: htmlText(first.showTitle).trim() + ' Episode ' + c.ep,
         url: c.watch });
     }
     eps.sort(function (a, b) { return a.number - b.number; });
     base.episodes = eps;
-    base.subCount = eps.length;
     return base;
   }).catch(function () { return base; });
 }
@@ -172,32 +183,23 @@ function getEpisodes(url, opts) {
   return getDetail(url, opts).then(function (d) { return d.episodes; });
 }
 
-// ── Streams: watch page -> availableres {720,1080,4k} direct files ───────────
+// ── Streams ─────────────────────────────────────────────────────────────────
 var _Q_LABEL = { '720': '720p', '1080': '1080p', '4k': '4K' };
 
-// 2026-09-26: watch pages now 302 to locked.php (login gate) for anonymous
-// requests, so the availableres JSON is often unreachable. The media itself
-// lives on an ungated CDN with a stable pattern verified 2026-09-26:
-//   https://myspacecat.pictures/<Folder>/<res>/E<NN>.<ext>
-// (also mirrored on s2.myspacecat.pictures). As a fallback, derive candidate
-// URLs from the ?e=<Folder>-<ep> slug and keep only ones a HEAD probe
-// confirms as video/*.
-var _CDN_HOSTS = ['https://myspacecat.pictures', 'https://s2.myspacecat.pictures'];
-var _CDN_VARIANTS = [['720', 'mp4'], ['1080', 'mp4'], ['1080', 'webm'], ['4k', 'webm']];
-
-function _slugParts(watchUrl) {
-  var m = String(watchUrl || '').match(/[?&]e=([^&]+)/);
-  if (!m) return null;
-  var slug = m[1].replace(/\+/g, ' ');
-  var cut = slug.lastIndexOf('-');
-  if (cut < 1) return null;
-  var ep = parseInt(slug.slice(cut + 1), 10);
-  if (!ep) return null;
-  var folder;
-  try { folder = decodeURIComponent(slug.slice(0, cut)); }
-  catch (e) { folder = slug.slice(0, cut); }
-  if (!folder) return null;
-  return { folder: folder, ep: ep };
+// res strings look like "4k-2" or "720-1,1080-1,4k-2" (1=mp4, 2=webm).
+function _parseRes(res) {
+  var map = {}, parts = String(res || '').split(',');
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i].split('-');
+    if (p.length === 2 && p[0]) map[p[0]] = (p[1] === '2') ? 'webm' : 'mp4';
+  }
+  return map;
+}
+function _topRes(map) {
+  if (map['4k']) return '4k';
+  if (map['1080']) return '1080';
+  if (map['720']) return '720';
+  return null;
 }
 
 function _headOk(u) {
@@ -210,12 +212,37 @@ function _headOk(u) {
   }, function () { return false; });
 }
 
+// 2026-09-26 fallback: media on an ungated CDN with a stable pattern:
+//   https://myspacecat.pictures/<Folder>/<res>/E<NN>.<ext>
+// (also mirrored on s2.myspacecat.pictures). Kept as a last resort.
+var _CDN_HOSTS = ['https://myspacecat.pictures', 'https://s2.myspacecat.pictures'];
+var _CDN_VARIANTS = [['720', 'mp4'], ['1080', 'mp4'], ['1080', 'webm'], ['4k', 'webm']];
+
+function _slugParts(watchUrl) {
+  var m = String(watchUrl || '').match(/[?&]e=([^&]+)/);
+  var slug = m ? m[1] : null;
+  if (!slug) {
+    var m2 = String(watchUrl || '').match(/\/watch\/([^\/\?#]+)/);
+    if (m2) slug = m2[1];
+  }
+  if (!slug) return null;
+  slug = slug.replace(/\+/g, ' ');
+  var cut = slug.lastIndexOf('-');
+  if (cut < 1) return null;
+  var ep = parseInt(slug.slice(cut + 1), 10);
+  if (!ep) return null;
+  var folder;
+  try { folder = decodeURIComponent(slug.slice(0, cut)); }
+  catch (e) { folder = slug.slice(0, cut); }
+  if (!folder) return null;
+  return { folder: folder, ep: ep };
+}
+
 function _cdnFallback(watchUrl) {
   var sp = _slugParts(watchUrl);
   if (!sp) return Promise.resolve([]);
   var epTag = 'E' + (sp.ep < 10 ? '0' + sp.ep : '' + sp.ep);
   var folderEnc = encodeURIComponent(sp.folder);
-  // Probe sequentially; stop early once a host+variant hits to save requests.
   var jobs = [];
   _CDN_VARIANTS.forEach(function (v) {
     jobs.push({ res: v[0], ext: v[1] });
@@ -237,7 +264,6 @@ function _cdnFallback(watchUrl) {
     });
   }
   return probeHost(_CDN_HOSTS[0], 0).then(function () {
-    // If the primary host gave nothing, try the mirror host.
     if (out.length) return out;
     return probeHost(_CDN_HOSTS[1], 0);
   });
@@ -248,61 +274,66 @@ function getVideoSources(episodeUrl) {
   if (url.indexOf('http') !== 0) {
     return Promise.reject(new Error('OppaiStream: bad episode url'));
   }
-  // Keep only the ?e= slug: extra params (e.g. &for=search) sometimes 404.
-  var em = url.match(/^([^?]+\/watch\?e=[^&]+)/);
+  // Normalize: keep only the watch path (strip /from/<src> and query args).
+  var em = url.match(/^(https?:\/\/[^\/]+\/watch\/[^\/\?#]+)/);
   if (em) url = em[1];
   return _get(url, SITE + '/').then(function (html) {
+    if (!html) throw new Error('OppaiStream: watch page fetch failed');
     var out = [];
-    // Subtitle tracks, e.g. <track src='...vtt' label='en' kind='subtitles'>.
+    // Subtitle tracks, e.g. <track id="sub-en" label="EN"
+    // src=".../sub_en.vtt" kind="subtitles" srclang="en">.
     var subs = [], tm, trackRe = /<track[^>]*>/g;
     while ((tm = trackRe.exec(html)) !== null) {
       var tag = tm[0];
-      if (!/kind='(captions|subtitles)'/.test(tag)) continue;
-      var tsrc = (tag.match(/\ssrc='([^']+)'/) || [])[1];
+      if (!/kind=["'](captions|subtitles)["']/.test(tag)) continue;
+      var tsrc = (tag.match(/\ssrc=["']([^"']+)["']/) || [])[1];
       if (!tsrc) continue;
-      // Absolute URL: the player's subtitle fetcher won't resolve relatives.
       if (tsrc.indexOf('http') !== 0) {
         tsrc = SITE + (tsrc.charAt(0) === '/' ? '' : '/') + tsrc;
       }
-      var tlabel = (tag.match(/\slabel='([^']+)'/) || [])[1]
-        || (tag.match(/\ssrclang='([^']+)'/) || [])[1] || 'sub';
+      var tlabel = (tag.match(/\slabel=["']([^"']+)["']/) || [])[1]
+        || (tag.match(/\ssrclang=["']([^"']+)["']/) || [])[1] || 'sub';
       // `lang` is required by the app's Subtitle model — without it the whole
       // VideoSource fails to parse and the player ends up with a null URL.
       subs.push({ url: tsrc.split(' ').join('%20'), lang: tlabel,
         label: tlabel,
         format: /\.srt(\?|$)/i.test(tsrc) ? 'srt' : 'vtt' });
     }
-    var m = html.match(/availableres\s*=\s*(\{[^}]*\})/);
-    if (m) {
-      var map = null;
-      try { map = JSON.parse(m[1]); } catch (e) { map = null; }
-      if (map) {
-        Object.keys(map).forEach(function (k) {
-          var u = String(map[k] || '').split(' ').join('%20');
-          if (!u) return;
-          out.push({ url: u,
-            quality: _Q_LABEL[k] || k,
-            container: /\.webm(\?|$)/i.test(u) ? 'webm' : 'mp4',
-            headers: { 'User-Agent': UA, 'Referer': SITE + '/' },
-            kind: 'sub', audioLang: 'ja', subtitles: subs });
-        });
-      }
-    }
-    if (!out.length) {
-      // Fallback: the plain <source> tag the player starts from.
-      var s = (html.match(/<source[^>]+src="([^"]+)"/) || [])[1];
-      if (s) {
-        var u2 = s.split(' ').join('%20');
-        out.push({ url: u2, quality: '720p',
-          container: /\.webm(\?|$)/i.test(u2) ? 'webm' : 'mp4',
+    // New player scheme: inline vars -> <storageBase>/<Folder>/ep.<ext>.
+    var folder = (html.match(/var folder\s*=\s*"([^"]+)"/) || [])[1];
+    var res = (html.match(/var res\s*=\s*"([^"]+)"/) || [])[1] || '';
+    var storageBase = (html.match(/var storageBase\s*=\s*"([^"]+)"/) || [])[1]
+      || (SITE + '/videos');
+    storageBase = storageBase.split('\\/').join('/');
+    var rmap = _parseRes(res);
+    var top = _topRes(rmap);
+    if (folder && top) {
+      var ext = rmap[top];
+      var u = (storageBase + '/' + encodeURIComponent(folder)
+        + '/ep.' + ext).split(' ').join('%20');
+      return _headOk(u).then(function (ok) {
+        if (!ok) {
+          var alt = ext === 'mp4' ? 'webm' : 'mp4';
+          var u2 = (storageBase + '/' + encodeURIComponent(folder)
+            + '/ep.' + alt).split(' ').join('%20');
+          return _headOk(u2).then(function (ok2) {
+            if (!ok2) return [];
+            return [{ url: u2, quality: _Q_LABEL[top] || top,
+              container: alt,
+              headers: { 'User-Agent': UA, 'Referer': SITE + '/' },
+              kind: 'sub', audioLang: 'ja', subtitles: subs }];
+          });
+        }
+        return [{ url: u, quality: _Q_LABEL[top] || top,
+          container: ext,
           headers: { 'User-Agent': UA, 'Referer': SITE + '/' },
-          kind: 'sub', audioLang: 'ja', subtitles: subs });
-      }
+          kind: 'sub', audioLang: 'ja', subtitles: subs }];
+      });
     }
     return out;
   }).then(function (out) {
     if (out.length) return out;
-    // Watch page gated (302 -> locked.php): derive streams from the CDN.
+    // Watch page gated or scheme changed: try the legacy CDN pattern.
     return _cdnFallback(url).then(function (cdn) {
       if (!cdn.length) throw new Error('OppaiStream: no streams found');
       return cdn;

@@ -721,6 +721,24 @@
       "icon": "icons/animeowl.png",
       "type": "anime",
       "lang": "en"
+    },
+    {
+      "id": "uhdmovies",
+      "name": "UHDMovies",
+      "version": "1.0.0",
+      "file": "providers/uhdmovies.js",
+      "icon": "icons/uhdmovies.png",
+      "type": "movie",
+      "lang": "en"
+    },
+    {
+      "id": "multimovies",
+      "name": "MultiMovies",
+      "version": "1.0.0",
+      "file": "providers/multimovies.js",
+      "icon": "icons/multimovies.png",
+      "type": "movie",
+      "lang": "en"
     }
   ]
 }

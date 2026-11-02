@@ -725,7 +725,7 @@
     {
       "id": "uhdmovies",
       "name": "UHDMovies",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "file": "providers/uhdmovies.js",
       "icon": "icons/uhdmovies.png",
       "type": "movie",
@@ -734,9 +734,27 @@
     {
       "id": "multimovies",
       "name": "MultiMovies",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "file": "providers/multimovies.js",
       "icon": "icons/multimovies.png",
+      "type": "movie",
+      "lang": "en"
+    },
+    {
+      "id": "gogoanime",
+      "name": "GoGoAnime",
+      "version": "1.0.0",
+      "file": "providers/gogoanime.js",
+      "icon": "icons/gogoanime.png",
+      "type": "anime",
+      "lang": "en"
+    },
+    {
+      "id": "nhkworld",
+      "name": "NHK World",
+      "version": "1.0.0",
+      "file": "providers/nhkworld.js",
+      "icon": "icons/nhkworld.png",
       "type": "movie",
       "lang": "en"
     }

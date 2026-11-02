@@ -113,5 +113,7 @@ MIT.
 | AnimeWorld | Anime | 1.0.0 | Italian anime (Italian subs + some Italian dubs), direct MP4 via the site API, no login. |
 | MyAsianTV | Movie | 1.0.0 | Asian dramas & movies (K/C/J), English subs via MegaPlay + VidBasic servers, no login. |
 | Library of Congress | Movie | 1.0.0 | Public-domain film classics from the LOC National Screening Room, direct MP4/HLS 1080p, no login. |
-| UHDMovies | Movie | 1.0.0 | Movies & TV shows, 4K/HDR with Hindi-English dual audio, direct file via signed links, no login. |
-| MultiMovies | Movie | 1.0.0 | Movies & TV shows via VidBolt HLS, multi-audio tracks (Hindi/Tamil/Telugu/English) + English subs, no login. |
+| UHDMovies | Movie | 1.0.1 | Movies & TV shows, 4K/HDR with Hindi-English dual audio, direct file via signed links, no login. |
+| MultiMovies | Movie | 1.0.1 | Movies & TV shows via VidBolt HLS, multi-audio tracks (Hindi/Tamil/Telugu/English) + English subs, no login. |
+| GoGoAnime | Anime | 1.0.0 | Anime with English subs + separate dub entries, via MegaPlay HLS (1080p/720p/480p) + multi-language subtitles, no login. |
+| NHK World | Movie | 1.0.0 | Free documentaries, travel & culture VOD from NHK WORLD-JAPAN (incl. Anime & Manga), direct HLS, no login. |

@@ -22,7 +22,7 @@ var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
 
 function getInfo() {
   return { name: 'MultiMovies', lang: 'en', baseUrl: FALLBACK_DOMAIN,
-    logo: FALLBACK_DOMAIN + '/favicon.ico', type: 'movie', version: '1.0.0' };
+    logo: FALLBACK_DOMAIN + '/favicon.ico', type: 'movie', version: '1.0.1' };
 }
 
 function getSettings() {
@@ -217,7 +217,15 @@ function _vbEpisodes(tmdb) {
   });
 }
 function getEpisodes(url, opts) {
-  var m = String(url || '').match(/^multimovies:\/\/play\/(movie|series)\/(\d+)(?:\/(\d+)\/(\d+))?/);
+  var raw = String(url || '');
+  // Search/home items carry page urls (multimovies://page/...); resolve them
+  // to play urls through getDetail first so every emitted url is usable.
+  if (/^multimovies:\/\/page\//.test(raw)) {
+    return getDetail(raw, opts).then(function (d) {
+      return getEpisodes(d.url, opts);
+    });
+  }
+  var m = raw.match(/^multimovies:\/\/play\/(movie|series)\/(\d+)(?:\/(\d+)\/(\d+))?/);
   if (!m) return Promise.reject(new Error('MultiMovies: bad episode url'));
   if (m[1] === 'movie') {
     var id = 'multimovies://play/movie/' + m[2];

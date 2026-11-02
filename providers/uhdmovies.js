@@ -325,11 +325,13 @@ function _qualityOf(label) {
 }
 
 /* ---------------- SID resolution (en.thenaukriadda.in) ----------------
- * Step 0: GET ?sid= -> form#lp-land (_lp_http) [legacy: form#landing/_wp_http]
- * Step 1: POST _lp_http -> form#landing (_wp_http)
- * Step 2: POST _wp_http -> form#landing (_wp_http2 + token)
- * Step 3: POST -> s_343('cookieName','cookieValue') + c.setAttribute("href","path")
- * Step 4: set cookie, GET path -> <meta http-equiv=refresh url=...> -> driveleech URL
+ * Flow B (current, verified 2026-11-02):
+ *   Step 0: GET ?sid= -> form#lp-land (_lp_http)
+ *   Step 1: POST _lp_http -> form#lp-s1-form (_lp_http2,_lp_token,_lp_chain,_lp_hop_index)
+ *   Step 2: POST hop -> stage-2 page; script sets lp-btn-go href to ?lp_go=lp-<hex>
+ *           and cookie lp-<hex>=<_lp_http2 value> via sc("lp-<hex>","<val>",60)
+ *   Step 3: set cookie, GET ?lp_go=lp-<hex> -> "Please wait" + window.location.replace(<final>)
+ * Flow A (legacy, kept as fallback): form#landing/_wp_http chain.
  */
 function _formVal(html, formId, inputName) {
   var fm = String(html || '').match(new RegExp('<form[^>]*id="' + formId + '"[^>]*>([\\s\\S]*?)<\\/form>', 'i'));
@@ -344,9 +346,43 @@ function _formVal(html, formId, inputName) {
   return out;
 }
 
+function _lpS1Form(html) {
+  var tag = String(html || '').match(/<form[^>]*id="lp-s1-form"[^>]*>/i);
+  if (!tag) return null;
+  var action = (tag[0].match(/action="([^"]*)"/i) || [])[1];
+  var names = ['_lp_http2', '_lp_token', '_lp_chain', '_lp_hop_index'];
+  var fields = {}, i, m, v;
+  for (i = 0; i < names.length; i++) {
+    m = String(html).match(new RegExp('<input[^>]*name="' + names[i] + '"[^>]*>', 'i'));
+    v = m ? (m[0].match(/value="([^"]*)"/i) || [])[1] : null;
+    if (v === null || v === undefined) return null;
+    fields[names[i]] = v;
+  }
+  if (!action) return null;
+  return { action: action, fields: fields };
+}
+
 function _resolveSid(sidUrl, jar, deadline) {
   function over() { throw new Error('UHDMovies: SID resolution budget exceeded'); }
   var origin = sidUrl.replace(/^(https?:\/\/[^\/]+).*/, '$1');
+  // Flow B steps 2-3 (current shortener shape).
+  function newFlow(s1) {
+    return _postForm(_abs(s1.action, origin), s1.fields, origin + '/', jar).then(function (r2) {
+      if (Date.now() > deadline) over();
+      var html = String(r2.body || '');
+      var go = html.match(/lp_go=(lp-[a-f0-9]+)/i);
+      var sc = html.match(/sc\("(lp-[a-f0-9]+)"\s*,\s*"([^"]+)"/);
+      if (!go || !sc) throw new Error('UHDMovies: SID stage-2 changed');
+      jar.map[sc[1]] = sc[2];
+      return _get(origin + '/?lp_go=' + go[1], jar, { 'Referer': s1.action });
+    }).then(function (r3) {
+      if (Date.now() > deadline) over();
+      var html = String(r3.body || '');
+      var m = html.match(/window\.location\.replace\("([^"]+)"\)/);
+      if (!m) throw new Error('UHDMovies: no SID final redirect');
+      return _abs(m[1].replace(/\\\//g, '/'), origin);
+    });
+  }
   return _get(sidUrl, jar, { 'Referer': origin + '/' }).then(function (r0) {
     if (Date.now() > deadline) over();
     var f0 = _formVal(r0.body, 'lp-land', '_lp_http');
@@ -360,11 +396,15 @@ function _resolveSid(sidUrl, jar, deadline) {
     throw new Error('UHDMovies: SID landing form changed (step 0)');
   }).then(function (h1) {
     if (Date.now() > deadline) over();
+    var s1 = _lpS1Form(h1);
+    if (s1) return newFlow(s1);
     var f1 = _formVal(h1, 'landing', '_wp_http');
     if (!f1) throw new Error('UHDMovies: SID form changed (step 1)');
     var p = {}; p['_wp_http'] = f1['_wp_http'];
     return _postForm(_abs(f1.action, origin), p, sidUrl, jar);
   }).then(function (r2) {
+    // Flow B (new shortener) already resolved to the final URL string.
+    if (typeof r2 === 'string') return r2;
     if (Date.now() > deadline) over();
     var tag = String(r2.body).match(/<form[^>]*id="landing"[^>]*>/i);
     var action = tag ? (tag[0].match(/action="([^"]*)"/i) || [])[1] : null;
@@ -374,6 +414,7 @@ function _resolveSid(sidUrl, jar, deadline) {
     if (!action) throw new Error('UHDMovies: SID form changed (step 2)');
     return _postForm(_abs(action, origin), { '_wp_http2': w2['_wp_http2'] || '', 'token': tok || '' }, sidUrl, jar);
   }).then(function (r3) {
+    if (typeof r3 === 'string') return r3;
     if (Date.now() > deadline) over();
     var cm = String(r3.body).match(/s_343\('([^']+)',\s*'([^']+)'\)/);
     var lm = String(r3.body).match(/c\.setAttribute\("href",\s*"([^"]+)"\)/);
@@ -381,6 +422,7 @@ function _resolveSid(sidUrl, jar, deadline) {
     jar.map[cm[1].trim()] = cm[2].trim();
     return _get(_abs(lm[1].trim(), origin), jar, { 'Referer': sidUrl });
   }).then(function (r4) {
+    if (typeof r4 === 'string') return r4;
     var mm = String(r4.body).match(/<meta[^>]*http-equiv=["']?refresh["']?[^>]*>/i);
     var uu = mm ? mm[0].match(/url=([^"'\s>]+)/i) : null;
     if (!uu || !uu[1]) throw new Error('UHDMovies: no driveleech redirect in SID meta refresh');
@@ -545,7 +587,7 @@ function getInfo() {
     baseUrl: _baseList()[0],
     logo: _baseList()[0] + '/favicon.ico',
     type: 'movie',
-    version: '1.0.0'
+    version: '1.0.1'
   };
 }
 

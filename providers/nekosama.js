@@ -47,7 +47,7 @@ function _getJson(url, referer) {
 
 function getInfo() {
   return { name: 'NekoSama', lang: 'fr', baseUrl: SITE,
-           logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.0' };
+           logo: SITE + '/favicon.ico', type: 'anime', version: '1.0.1' };
 }
 
 function _loadIndex() {
@@ -133,22 +133,52 @@ function _cover(html) {
   return m ? m[1] : null;
 }
 
+function _variantList(se) {
+  // 2026-11-04: neko-sama.fr changed #js-seasons-data — season.episods is now
+  // a language-variant map {vostfr:[...], vf:[...], en:[...], default:[...]}
+  // instead of a plain episode array.
+  var e = se.episods;
+  if (!e) return [];
+  if (Object.prototype.toString.call(e) === '[object Array]') return [{ key: 'default', list: e }];
+  var keys = Object.keys(e), out = [], i;
+  for (i = 0; i < keys.length; i++) out.push({ key: keys[i], list: e[keys[i]] || [] });
+  return out;
+}
+
+function _variantTag(key) {
+  var k = String(key || '').toLowerCase();
+  if (k === 'vostfr') return { suffix: 'VOSTFR', badge: 'SUB', kind: 'sub' };
+  if (k === 'vf') return { suffix: 'VF', badge: 'DUB', kind: 'dub' };
+  if (k === 'en') return { suffix: 'EN', badge: 'DUB', kind: 'dub' };
+  return { suffix: '', badge: null, kind: null };
+}
+
 function _episodesFrom(slug, html) {
   var seasons = _seasonsData(html);
   var eps = [];
   for (var s = 0; s < seasons.length; s++) {
     var se = seasons[s] || {};
-    var list = se.episods || [];
-    for (var i = 0; i < list.length; i++) {
-      var ep = list[i] || {};
-      var num = parseInt(ep.num, 10);
-      eps.push({
-        id: 'nekosama://play/' + slug + '/' + s + '/' + (isNaN(num) ? i : num),
-        title: 'E' + (isNaN(num) ? (i + 1) : num) + (ep.name ? ' - ' + _trim(ep.name) : ''),
-        url: 'nekosama://play/' + slug + '/' + s + '/' + (isNaN(num) ? i : num),
-        number: isNaN(num) ? (i + 1) : num,
-        thumbnail: se.preview || null
-      });
+    var variants = _variantList(se);
+    for (var v = 0; v < variants.length; v++) {
+      var tag = _variantTag(variants[v].key);
+      var list = variants[v].list;
+      for (var i = 0; i < list.length; i++) {
+        var ep = list[i] || {};
+        var num = parseInt(ep.num, 10);
+        var n = isNaN(num) ? (i + 1) : num;
+        var title = 'E' + n + (ep.name ? ' - ' + _trim(ep.name) : '') +
+                    (tag.suffix ? ' [' + tag.suffix + ']' : '');
+        var e = {
+          id: 'nekosama://play/' + slug + '/' + s + '/' + variants[v].key + '/' + n,
+          title: title,
+          url: 'nekosama://play/' + slug + '/' + s + '/' + variants[v].key + '/' + n,
+          number: n,
+          thumbnail: se.preview || null
+        };
+        if (tag.badge) e.dubBadge = tag.badge;
+        if (tag.kind) e.kind = tag.kind;
+        eps.push(e);
+      }
     }
   }
   return eps;
@@ -206,16 +236,25 @@ function _expandQualities(masterUrl, label, ref) {
 }
 
 function getVideoSources(episodeUrl) {
-  var m = /^nekosama:\/\/play\/([a-z0-9-]+)\/(\d+)\/(\d+)/i.exec(String(episodeUrl));
+  var m = /^nekosama:\/\/play\/([a-z0-9-]+)\/(\d+)\/([a-z]+)\/(\d+)/i.exec(String(episodeUrl)) ||
+          /^nekosama:\/\/play\/([a-z0-9-]+)\/(\d+)\/(\d+)/i.exec(String(episodeUrl));
   if (!m) return Promise.reject(new Error('NekoSama: bad episode url'));
-  var slug = m[1], sIdx = parseInt(m[2], 10), num = parseInt(m[3], 10);
+  var slug = m[1], sIdx = parseInt(m[2], 10), variant = m.length > 4 ? m[3] : null, num = parseInt(m[m.length > 4 ? 4 : 3], 10);
   var pageUrl = SITE + '/anime/' + slug;
   return _get(pageUrl, SITE + '/').then(function (html) {
     var seasons = _seasonsData(html);
     var se = seasons[sIdx] || {};
-    var list = se.episods || [];
+    var variants = _variantList(se);
+    var list = [];
+    var v, i;
+    if (variant) {
+      for (v = 0; v < variants.length; v++) {
+        if (variants[v].key === variant) { list = variants[v].list; break; }
+      }
+    }
+    if (!list.length) { for (v = 0; v < variants.length; v++) list = list.concat(variants[v].list); }
     var ep = null;
-    for (var i = 0; i < list.length; i++) {
+    for (i = 0; i < list.length; i++) {
       if (parseInt(list[i].num, 10) === num) { ep = list[i]; break; }
     }
     if (!ep) ep = list[0];

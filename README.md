@@ -106,7 +106,7 @@ MIT.
 | MonosChinos | Anime | 1.0.0 | Anime sub-español, multi-server embeds (Okru/Mp4Upload extracted by the app), no login. |
 | HindiAnime | Anime | 1.0.0 | Hindi/Tamil/Telugu dubbed anime, signed HLS (Auto) via VidMoly embeds, no login. |
 | MMani | Anime | 1.0.0 | Anime BD/WEB releases, English subbed HLS (720p/1080p) with English subtitles, no login. |
-| NekoSama | Anime | 1.0.0 | French VF/VOSTFR anime, signed HLS (Auto + quality variants) via ansembed embeds, no login. |
+| NekoSama | Anime | 1.0.1 | French VF/VOSTFR anime, signed HLS (Auto + quality variants) via ansembed embeds, no login. |
 | AV1Please | Anime | 1.0.3 | Tiny AV1 encodes (sub + dual audio), direct file + DASH streams via the site API, no login. |
 | Prelinger Archives | Movie | 1.0.0 | Ephemeral films & educational shorts from archive.org's Prelinger collection, direct MP4, no login. |
 | Silent Films | Movie | 1.0.0 | Silent-era features & shorts from archive.org's silent_films collection, direct MP4, no login. |
@@ -119,3 +119,4 @@ MIT.
 | NHK World | Movie | 1.0.0 | Free documentaries, travel & culture VOD from NHK WORLD-JAPAN (incl. Anime & Manga), direct HLS, no login. |
 | Torrentio | Movie | 1.0.0 | Movies & series torrent aggregator via the Stremio protocol, magnet links, no login. |
 | AniWorld | Anime | 1.0.0 | German anime (SUB + DUB), HLS via Vidmoly embeds, no login. |
+| LookMovie2 | Movie | 1.0.0 | Movies & TV shows (50k titles), HLS via the site's own signed CDN + multi-language subtitles, no login. |

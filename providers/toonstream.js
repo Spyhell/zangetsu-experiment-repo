@@ -1,4 +1,4 @@
-// ToonStream — anime, movies & cartoons (toonstream.us).
+// ToonStream — anime, movies & cartoons (tooniboy.xyz, formerly toonstream.us).
 //
 // Chain (all server-side, no login):
 //   /s?q=<query>            -> article cards (title, poster, /movies|/series/<slug>)
@@ -19,14 +19,14 @@
 var SOURCE_ID = (typeof __SOURCE_ID !== 'undefined' && __SOURCE_ID)
   ? String(__SOURCE_ID) : 'toonstream';
 
-var SITE = 'https://toonstream.us';
+var SITE = 'https://tooniboy.xyz';
 var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
   + '(KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 
 function getInfo() {
   return { name: 'ToonStream', lang: 'en', baseUrl: SITE,
     logo: SITE + '/public/img/sitename/TOONSTREAM.png',
-    type: 'anime', version: '1.0.0' };
+    type: 'anime', version: '1.0.1' };
 }
 
 // ── Network ─────────────────────────────────────────────────────────────────
@@ -306,7 +306,9 @@ function getVideoSources(episodeUrl) {
   var pagePath = m[1] ? m[1] : '/episode/' + m[2];
   return _get(SITE + pagePath).then(function (html) {
     var embeds = [], seen = {};
-    var re = /<iframe[^>]+src="([^"]+)"/g;
+    // 2026-11-05: embeds now live in data-src attributes (server-tab lazy
+    // loading), with plain <iframe src> kept as fallback.
+    var re = /(?:<iframe[^>]+src=|data-src=)"([^"]+)"/g;
     var im;
     while ((im = re.exec(html)) !== null) {
       var src = im[1];

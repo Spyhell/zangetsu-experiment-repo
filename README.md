@@ -125,3 +125,5 @@ MIT.
 | Kuramanime | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 (720p/480p/360p) via Kuramadrive, no login. |
 | Anichin | Anime | 1.0.0 | Indonesian-subbed donghua, OK.ru embeds (app-resolved), no login. |
 | Lucifer Donghua | Anime | 1.0.0 | English-subbed + Hindi-dub donghua, OK.ru server + direct archive.org MP4 on some episodes, no login. Older back-catalog episodes are Dailymotion-only and unplayable in-app. |
+| Otakudesu | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 (360p) via Blogger/googlevideo, no login. Stream URLs are IP-bound — phone is the verdict on playback. |
+| HidoriStream | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 on episode pages, no login. |

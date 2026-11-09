@@ -829,6 +829,24 @@
    "name": "Lucifer Donghua",
    "type": "anime",
    "version": "1.0.0"
+  },
+  {
+   "file": "providers/otakudesu.js",
+   "id": "otakudesu",
+   "lang": "id",
+   "logo": "icons/otakudesu.png",
+   "name": "Otakudesu",
+   "type": "anime",
+   "version": "1.0.0"
+  },
+  {
+   "file": "providers/hidoristream.js",
+   "id": "hidoristream",
+   "lang": "id",
+   "logo": "icons/hidoristream.png",
+   "name": "HidoriStream",
+   "type": "anime",
+   "version": "1.0.0"
   }
  ]
 }

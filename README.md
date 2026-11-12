@@ -128,3 +128,8 @@ MIT.
 | Otakudesu | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 (360p) via Blogger/googlevideo, no login. Stream URLs are IP-bound — phone is the verdict on playback. |
 | HidoriStream | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 on episode pages, no login. |
 | TioAnime | Anime | 1.0.0 | Spanish-subbed anime, direct MP4 via YourUpload embeds (Referer forwarded), no login. |
+| AniLibria | Anime | 1.0.0 | Russian-voiced anime, direct streams, no login. |
+| TED Talks | Movie | 1.0.0 | TED Talks on creativity, science, tech and more, direct video, no login. |
+| Samehadaku | Anime | 1.0.0 | Indonesian-subbed anime, direct streams, no login. |
+| Red Bull TV | Movie | 1.0.0 | Sports, adventure and action films and documentaries, direct HLS, no login. |
+| Animetsu | Anime | 1.0.0 | English-subbed anime, HLS via MegaPlay embeds, no login. |

@@ -127,3 +127,4 @@ MIT.
 | Lucifer Donghua | Anime | 1.0.0 | English-subbed + Hindi-dub donghua, OK.ru server + direct archive.org MP4 on some episodes, no login. Older back-catalog episodes are Dailymotion-only and unplayable in-app. |
 | Otakudesu | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 (360p) via Blogger/googlevideo, no login. Stream URLs are IP-bound — phone is the verdict on playback. |
 | HidoriStream | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 on episode pages, no login. |
+| TioAnime | Anime | 1.0.0 | Spanish-subbed anime, direct MP4 via YourUpload embeds (Referer forwarded), no login. |

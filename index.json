@@ -714,15 +714,6 @@
       "lang": "en"
     },
     {
-      "id": "animeowl",
-      "name": "AnimeOwl",
-      "version": "1.0.0",
-      "file": "providers/animeowl.js",
-      "icon": "icons/animeowl.png",
-      "type": "anime",
-      "lang": "en"
-    },
-    {
       "id": "uhdmovies",
       "name": "UHDMovies",
       "version": "1.0.1",

@@ -129,6 +129,7 @@ MIT.
 | HidoriStream | Anime | 1.0.0 | Indonesian-subbed anime, direct MP4 on episode pages, no login. |
 | TioAnime | Anime | 1.0.0 | Spanish-subbed anime, direct MP4 via YourUpload embeds (Referer forwarded), no login. |
 | AnimeParadise | Anime | 1.0.0 | English-subbed anime, HLS (1080p/720p/480p) via the site's own stream proxy + English subtitles, no login. |
+| AniZone | Anime | 1.0.0 | English-subbed anime, multi-audio HLS (Japanese + English tracks, 1080p/720p/360p) + English subtitles, no login. |
 | AniLibria | Anime | 1.0.0 | Russian-voiced anime, direct streams, no login. |
 | TED Talks | Movie | 1.0.0 | TED Talks on creativity, science, tech and more, direct video, no login. |
 | Samehadaku | Anime | 1.0.0 | Indonesian-subbed anime, direct streams, no login. |

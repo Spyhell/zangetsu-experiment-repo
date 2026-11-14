@@ -768,6 +768,15 @@
    "lang": "de"
   },
   {
+   "file": "providers/anizone.js",
+   "id": "anizone",
+   "lang": "en",
+   "logo": "icons/anizone.png",
+   "name": "AniZone",
+   "type": "anime",
+   "version": "1.0.0"
+  },
+  {
    "id": "lookmovie2",
    "name": "LookMovie2",
    "version": "1.0.0",

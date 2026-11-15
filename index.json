@@ -865,6 +865,15 @@
    "name": "AnimeParadise",
    "type": "anime",
    "version": "1.0.0"
+  },
+  {
+   "file": "providers/asiancrush.js",
+   "id": "asiancrush",
+   "lang": "en",
+   "logo": "icons/asiancrush.png",
+   "name": "AsianCrush",
+   "type": "movie",
+   "version": "1.0.0"
   }
  ]
 }

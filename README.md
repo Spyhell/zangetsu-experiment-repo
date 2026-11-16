@@ -131,8 +131,10 @@ MIT.
 | AnimeParadise | Anime | 1.0.0 | English-subbed anime, HLS (1080p/720p/480p) via the site's own stream proxy + English subtitles, no login. |
 | AniZone | Anime | 1.0.0 | English-subbed anime, multi-audio HLS (Japanese + English tracks, 1080p/720p/360p) + English subtitles, no login. |
 | AsianCrush | Movie | 1.0.0 | Free Asian dramas + movies, HLS up to 1080p (subs burned in), no login. |
+| Midnight Pulp | Movie | 1.0.0 | Free cult/horror/exploitation films, HLS up to 1080p (subs burned in), no login. |
+| Screambox | Movie | 1.0.0 | Free horror films + documentaries, HLS up to 1080p (subs burned in), no login. |
 | AniLibria | Anime | 1.0.0 | Russian-voiced anime, direct streams, no login. |
-| TED Talks | Movie | 1.0.0 | TED Talks on creativity, science, tech and more, direct video, no login. |
+| TED Talks | Movie | 1.0.1 | TED Talks on creativity, science, tech and more, direct video, no login. |
 | Samehadaku | Anime | 1.0.0 | Indonesian-subbed anime, direct streams, no login. |
 | Red Bull TV | Movie | 1.0.0 | Sports, adventure and action films and documentaries, direct HLS, no login. |
 | Animetsu | Anime | 1.0.0 | English-subbed anime, HLS via MegaPlay embeds, no login. |

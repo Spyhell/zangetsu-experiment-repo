@@ -35,7 +35,7 @@ var RESP_KEY = 'sHh7yiLK70KI+VmsGESkz5TeSVxtbciN';
 
 function getInfo() {
   return { name: 'AsianCrush', lang: 'en', baseUrl: SITE,
-    logo: SITE + '/logo.png', type: 'movie', version: '1.0.0' };
+    logo: SITE + '/logo.png', type: 'movie', version: '1.0.1' };
 }
 
 // ── Pure-JS MD5 (RFC 1321) ──────────────────────────────────────────────────
@@ -219,6 +219,12 @@ function _proxy(targetUrl) {
   try { tag = _cryptoJsEncrypt(targetUrl, MP_KEY); }
   catch (e) { return Promise.reject(new Error('AsianCrush: encrypt failed')); }
   return fetch(PROXY, { headers: { 'User-Agent': UA, 'Content-Type': 'application/json',
+    // 2026-11-16: the /api/get edge closes keep-alive sockets after a
+    // response; Node's undici reuses the dead socket ("other side closed")
+    // on the 2nd/3rd proxy call. Forcing a fresh connection per call fixes
+    // it in Node (same fix as the midnightpulp/screambox clones); the app's
+    // fetch bridge ignores/accepts it harmlessly.
+    'Connection': 'close',
     cauth: CAUTH, 'mp-tag': tag } })
     .then(function (r) { return r.body || ''; })
     .then(function (body) {

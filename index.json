@@ -486,7 +486,7 @@
    "logo": "icons/ted.png",
    "name": "TED Talks",
    "type": "movie",
-   "version": "1.0.0"
+   "version": "1.0.1"
   },
   {
    "file": "providers/nasa.js",
@@ -872,6 +872,24 @@
    "lang": "en",
    "logo": "icons/asiancrush.png",
    "name": "AsianCrush",
+   "type": "movie",
+   "version": "1.0.0"
+  },
+  {
+   "file": "providers/midnightpulp.js",
+   "id": "midnightpulp",
+   "lang": "en",
+   "logo": "icons/midnightpulp.png",
+   "name": "Midnight Pulp",
+   "type": "movie",
+   "version": "1.0.0"
+  },
+  {
+   "file": "providers/screambox.js",
+   "id": "screambox",
+   "lang": "en",
+   "logo": "icons/screambox.png",
+   "name": "Screambox",
    "type": "movie",
    "version": "1.0.0"
   }

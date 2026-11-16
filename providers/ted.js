@@ -22,7 +22,7 @@ var _TED_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHT
 function getInfo() {
   return {
     name: 'TED Talks', lang: 'en', baseUrl: _TED_SITE,
-    logo: _TED_SITE + '/favicon.ico', type: 'movie', version: '1.0.0'
+    logo: _TED_SITE + '/favicon.ico', type: 'movie', version: '1.0.1'
   };
 }
 
@@ -134,6 +134,12 @@ function search(query, page, opts) {
   var q = String(query || '').replace(/^\s+|\s+$/g, '');
   if (!q) return Promise.resolve([]);
   var latestP = _pageProps(_TED_SITE + '/talks');
+  // 2026-11-16: latestP is a fallback branch — if the main chain succeeds
+  // it is never consumed. A rejection with no handler is an unhandled
+  // rejection in Node and crashes the harness process (killed the 2026-11-16
+  // full run when /talks timed out). Mark it handled here; the .catch
+  // branch below still reads it via its own .then.
+  latestP.catch(function () {});
   return _pageProps(_TED_SITE + '/topics').then(function (pp) {
     var slug = _findTopicSlug(q, pp.list);
     if (!slug) throw new Error('TED: no topic');

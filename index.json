@@ -892,6 +892,24 @@
    "name": "Screambox",
    "type": "movie",
    "version": "1.0.0"
+  },
+  {
+   "file": "providers/dovechannel.js",
+   "id": "dovechannel",
+   "lang": "en",
+   "logo": "icons/dovechannel.png",
+   "name": "Dove Channel",
+   "type": "movie",
+   "version": "1.0.0"
+  },
+  {
+   "file": "providers/fandor.js",
+   "id": "fandor",
+   "lang": "en",
+   "logo": "icons/fandor.png",
+   "name": "Fandor",
+   "type": "movie",
+   "version": "1.0.0"
   }
  ]
 }

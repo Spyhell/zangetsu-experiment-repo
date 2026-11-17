@@ -133,6 +133,8 @@ MIT.
 | AsianCrush | Movie | 1.0.1 | Free Asian dramas + movies, HLS up to 1080p (subs burned in), no login. |
 | Midnight Pulp | Movie | 1.0.0 | Free cult/horror/exploitation films, HLS up to 1080p (subs burned in), no login. |
 | Screambox | Movie | 1.0.0 | Free horror films + documentaries, HLS up to 1080p (subs burned in), no login. |
+| Dove Channel | Movie | 1.0.0 | Free family/faith films + series, HLS up to 1080p (subs burned in), no login. |
+| Fandor | Movie | 1.0.0 | Free arthouse/indie/festival films, HLS up to 1080p (subs burned in), no login. |
 | AniLibria | Anime | 1.0.0 | Russian-voiced anime, direct streams, no login. |
 | TED Talks | Movie | 1.0.1 | TED Talks on creativity, science, tech and more, direct video, no login. |
 | Samehadaku | Anime | 1.0.0 | Indonesian-subbed anime, direct streams, no login. |
